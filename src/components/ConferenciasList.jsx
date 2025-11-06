@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Eye, Calendar, MapPin, User, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService } from '../services/api';
-import { formatarData, getCorStatus, filtrarConferencias, debounce } from '../lib/utils';
+import { formatarDataHora, formatarData, getCorStatus, filtrarConferencias, debounce } from '../lib/utils';
 import { MENSAGENS } from '../lib/constants';
+
 
 export default function ConferenciasList({ limite = null, titulo = "Conferências" }) {
   const [conferencias, setConferencias] = useState([]);
@@ -133,7 +134,7 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
                             {conferencia.cidade}
                           </Badge>
                           <Badge variant="secondary">
-                            {formatarData(conferencia.dataConferencia)}
+                            {formatarDataHora(conferencia.dataConferencia)}
                           </Badge>
                         </div>
                         
@@ -239,7 +240,7 @@ function ConferenciaDetalhes({ conferencia, onClose }) {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Data da Conferência</label>
-                <p className="text-lg">{formatarData(conferencia.dataConferencia)}</p>
+                <p className="text-lg">{formatarDataHora(conferencia.dataConferencia)}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Técnicos</label>

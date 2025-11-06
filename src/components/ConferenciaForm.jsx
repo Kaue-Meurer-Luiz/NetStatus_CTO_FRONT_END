@@ -205,7 +205,7 @@ export default function ConferenciaForm({ onSuccess }) {
                 <Label htmlFor="dataConferencia">Data da Conferência *</Label>
                 <Input
                   id="dataConferencia"
-                  type="date"
+                  type="datetime-local"
                   value={conferencia.dataConferencia}
                   onChange={(e) => atualizarCampo('dataConferencia', e.target.value)}
                   className={erros.dataConferencia ? 'border-red-500' : ''}

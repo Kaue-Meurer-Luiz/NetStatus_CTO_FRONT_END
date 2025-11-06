@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL base da API
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://191.243.48.49:8080/api';
 
 // Instância do axios com configurações padrão
 const api = axios.create({
@@ -53,19 +53,18 @@ export const conferenciasService = {
     }
   },
 
-  // Buscar as 10 mais recentes
+  // Buscar as 5 mais recentes
   buscarUltimasConferencias: async () => {
-    try {
-      const conferencias = await conferenciasService.buscarConferencias();
-      return conferencias
-        .filter(c => c?.dataConferencia)
-        .sort((a, b) => new Date(b.dataConferencia) - new Date(a.dataConferencia))
-        .slice(0, 10);
-    } catch (error) {
-      console.error('Erro ao buscar últimas conferências:', error);
-      return [];
-    }
-  },
+  try {
+    const response = await api.get('/conferencias/ultimas');
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar últimas conferências:', error);
+    return [];
+  }
+},
+
+
 };
 
 // Serviço de Usuários

@@ -38,10 +38,9 @@ export const validarConferencia = (conferencia) => {
   };
 };
 
-// Formatar data para exibição
+// Formatar data para exibição (só data)
 export const formatarData = (data) => {
   if (!data) return '';
-  
   try {
     const dataObj = new Date(data);
     return dataObj.toLocaleDateString('pt-BR');
@@ -53,14 +52,17 @@ export const formatarData = (data) => {
 // Formatar data e hora para exibição
 export const formatarDataHora = (data) => {
   if (!data) return '';
-  
   try {
     const dataObj = new Date(data);
-    return dataObj.toLocaleString('pt-BR');
+    return dataObj.toLocaleString('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    });
   } catch (error) {
     return data;
   }
 };
+
 
 // Gerar cor baseada no status da porta
 export const getCorStatus = (status) => {
