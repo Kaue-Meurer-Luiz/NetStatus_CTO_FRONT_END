@@ -7,8 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Eye, Calendar, MapPin, User, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService } from '../services/api';
-import { formatarDataHora, formatarData, getCorStatus, filtrarConferencias, debounce } from '../lib/utils';
+import { formatarDataHora, formatarData, getCorStatus, filtrarConferencias, debounce, formatarBooleano } from '../lib/utils';
 import { MENSAGENS } from '../lib/constants';
+
+//console.log('Valor de formatarBooleano:', formatarBooleano); 
+
 
 export default function ConferenciasList({ limite = null, titulo = "Conferências" }) {
   const [conferencias, setConferencias] = useState([]);
@@ -32,7 +35,7 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
     try {
       let dados = await conferenciasService.buscarConferencias();
       
-      // Se há limite, aplicar (para últimas 10 conferências)
+      // Se há limite, aplicar (para últimas 05 conferências)
       if (limite) {
         dados = dados
           .sort((a, b) => new Date(b.dataConferencia) - new Date(a.dataConferencia))
@@ -69,7 +72,7 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
     setConferenciaSelecionada(null);
   };
 
-  // NOVO: Função para obter o nome do técnico (usa o objeto completo)
+  // Função para obter o nome do técnico (usa o objeto completo)
   const obterNomeTecnico = (tecnico) => {
     if (!tecnico) return 'N/A';
     if (typeof tecnico === 'object' && tecnico.nome) {
@@ -81,6 +84,7 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
     }
     return 'N/A';
   };
+
 
   if (loading) {
     return (
@@ -296,7 +300,7 @@ function ConferenciaDetalhes({ conferencia, onClose, obterNomeTecnico }) {
                             {porta.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>{porta.plotado || '-'}</TableCell>
+                        <TableCell>{formatarBooleano(porta.plotado)}</TableCell>
                         <TableCell>{porta.observacao || '-'}</TableCell>
                       </TableRow>
                     ))}

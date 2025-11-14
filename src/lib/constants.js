@@ -30,8 +30,8 @@ export const CONFERENCIA_PADRAO = {
   cidade: '',
   dataConferencia: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
   observacao: '',
-  tecInterno_id: 1,
-  tecExterno_id: 1,
+  tecInterno_id: 0,
+  tecExterno_id: 0,
   portas: [{ ...PORTA_PADRAO }]
 };
 

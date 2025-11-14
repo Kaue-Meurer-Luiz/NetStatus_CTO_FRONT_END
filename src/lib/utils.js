@@ -108,3 +108,11 @@ export const filtrarConferencias = (conferencias, termoBusca) => {
     );
   });
 };
+
+// Formatar valor booleano para exibição
+export const formatarBooleano = (valor) => {
+  if (valor === true || valor === 'true') return 'Sim';
+  if (valor === false || valor === 'false') return 'Não';
+  return '-';
+};
+
