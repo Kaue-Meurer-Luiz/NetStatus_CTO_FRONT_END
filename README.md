@@ -1,6 +1,7 @@
 # Sistema de Conferências - Frontend
 
 Um sistema web moderno para gestão de conferências de caixas, desenvolvido em React com interface profissional e responsiva.
+Front-End desenvolvido utilizando I.A pois principal ponto a ser praticado é o  BackEnd com Java e SpringBoot, onde limitei o uso de inteligencia Artificial para praticar algo que realmente seja de meu maior interesse, Java com SpringBoot.
 
 ## 🚀 Funcionalidades
 
@@ -11,14 +12,12 @@ Um sistema web moderno para gestão de conferências de caixas, desenvolvido em 
 - **Listagem de Conferências** - Visualizar todas as conferências cadastradas
 - **Busca e Filtros** - Pesquisar por caixa, cidade, cliente, status
 - **Visualização de Detalhes** - Modal com informações completas
-- **Armazenamento Local** - Persistência de dados no localStorage
-- **Interface Responsiva** - Funciona em desktop e mobile
+- **Interface Responsiva** - Funcional em desktop e futuramente mobile
 - **Validação de Formulários** - Validação completa dos dados
 - **Tratamento de Erros** - Mensagens de erro apropriadas
 
 ### 🔄 Integração com API
-- **Endpoint POST**: `http://localhost:8080/api/conferencias`
-- **Fallback Local**: Dados salvos no localStorage quando API não disponível
+- **Endpoint POST**: `http://{ip publico api + porta}:8080/api/conferencias`
 - **Axios**: Biblioteca para requisições HTTP
 - **Tratamento de Erros**: Mensagens informativas para problemas de conexão
 
@@ -68,41 +67,34 @@ git clone <repository-url>
 cd conferencias-frontend
 
 # Instalar dependências
-pnpm install
+npm install
 
 # Iniciar servidor de desenvolvimento
-pnpm run dev --host
+npm run dev
 ```
 
-A aplicação estará disponível em `http://localhost:5173`
+A aplicação estará disponível em `http://localhost:5173` ou `http://{ip publico}:5173`
+Sem dados amostra ao menos com API UP
 
-### Build para Produção
-```bash
-# Gerar build otimizado
-pnpm run build
-
-# Visualizar build localmente
-pnpm run preview
-```
 
 ## 📊 Estrutura de Dados
 
 ### Conferência
 ```json
 {
-  "caixa": "A0139PRA",
-  "cidade": "Pranchita", 
-  "dataConferencia": "2025-09-06",
-  "observacao": "Conferência de caixa lotada",
+  "caixa": "CTO 123",
+  "cidade": "Salto do Lontra - PR",
+  "dataConferencia": "2025-11-12T00:00:00",
+  "observacao": "Teste de Observação",
   "tecInterno_id": 1,
-  "tecExterno_id": 8,
+	"tecExterno_id": 9,
   "portas": [
     {
-      "nrPorta": 1,
-      "cliente": "21920",
-      "status": "ATIVO",
-      "plotado": "",
-      "observacao": ""
+      "nrPorta":1,
+			"cliente":"21920",
+			"status":"ATIVO",
+			"plotado": "0",
+			"observacao":""
     }
   ]
 }
@@ -112,20 +104,19 @@ pnpm run preview
 - **ATIVO** - Porta ativa
 - **CANCELADO** - Porta cancelada
 - **MUDOU-SE** - Cliente mudou-se
-- **Ñ IDENTIFICADO** - Cliente não identificado
 - **Ñ CAIU NGM** - Não caiu ninguém
 
 ## 🔧 Configuração da API
 
 ### Endpoint Principal
-- **URL**: `http://localhost:8080/api/conferencias`
+- **URL**: `http://{ip publico}:8080/api/conferencias`
 - **Método**: POST
 - **Content-Type**: application/json
 
 ### Configuração no Código
 ```javascript
 // src/services/api.js
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://{ip publico}:8080/api';
 ```
 
 Para alterar a URL da API, modifique a constante `API_BASE_URL` no arquivo `src/services/api.js`.
@@ -134,7 +125,7 @@ Para alterar a URL da API, modifique a constante `API_BASE_URL` no arquivo `src/
 
 ### Dashboard (`/`)
 - Estatísticas gerais (total, mês atual, portas, cidades)
-- Últimas 10 conferências
+- Últimas 05 conferências
 - Ações rápidas
 - Navegação para outras seções
 
@@ -142,7 +133,7 @@ Para alterar a URL da API, modifique a constante `API_BASE_URL` no arquivo `src/
 - Formulário completo de cadastro
 - Validação em tempo real
 - Gestão dinâmica de portas
-- Integração com API + fallback local
+- Integração com API 
 
 ### Todas as Conferências (`/conferencias`)
 - Listagem completa
@@ -155,7 +146,6 @@ Para alterar a URL da API, modifique a constante `API_BASE_URL` no arquivo `src/
 - **Design System**: Baseado em shadcn/ui
 - **Cores**: Esquema profissional com suporte a dark mode
 - **Tipografia**: Hierarquia clara e legível
-- **Responsividade**: Mobile-first approach
 - **Acessibilidade**: Componentes acessíveis por padrão
 - **Micro-interações**: Hover states e transições suaves
 
@@ -181,39 +171,15 @@ Para alterar a URL da API, modifique a constante `API_BASE_URL` no arquivo `src/
 - **Erro de Conexão**: Mensagem informativa quando API não disponível
 - **Validação**: Destacar campos com erro e mensagens específicas
 - **Timeout**: Configurado para 10 segundos
-- **Fallback**: Salvamento local quando API falha
 
-## 🔄 Próximas Melhorias Sugeridas
-
-### Backend
-- Implementar endpoints GET para consulta
-- Adicionar paginação e filtros na API
-- Autenticação e autorização
-- Logs de auditoria
-
-### Frontend
-- Implementar dark mode completo
-- Adicionar gráficos e relatórios
-- Exportação de dados (PDF, Excel)
-- Notificações push
-- Cache inteligente
-- Modo offline
-
-### DevOps
-- Docker para containerização
-- CI/CD pipeline
-- Testes automatizados
-- Monitoramento e métricas
 
 ## 📄 Licença
 
-Este projeto foi desenvolvido para gestão interna de conferências de caixas.
+Este projeto foi desenvolvido para gestão interna de conferências de CTO's (Caixa de Terminação Óptica)
 
 ## 👥 Suporte
 
 Para dúvidas ou sugestões sobre o sistema, entre em contato com a equipe de desenvolvimento.
+kauemluiz@gmail.com
 
 ---
-
-**Versão**: 1.0.0  
-**Última Atualização**: Setembro 2025
