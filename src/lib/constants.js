@@ -20,7 +20,7 @@ export const PORTA_PADRAO = {
   nrPorta: 1,
   cliente: '',
   status: STATUS_PORTA.ATIVO,
-  plotado: '',
+  plotado: false,
   observacao: ''
 };
 

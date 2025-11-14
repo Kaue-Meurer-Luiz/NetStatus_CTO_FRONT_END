@@ -11,6 +11,10 @@ import { conferenciasService, usuariosService } from '../services/api';
 import { validarConferencia } from '../lib/utils';
 import { CONFERENCIA_PADRAO, PORTA_PADRAO, STATUS_OPTIONS, MENSAGENS } from '../lib/constants';
 
+import { Checkbox } from "@/components/ui/checkbox"
+
+
+
 export default function ConferenciaForm({ onSuccess }) {
   const [conferencia, setConferencia] = useState(CONFERENCIA_PADRAO);
   const [loading, setLoading] = useState(false);
@@ -33,14 +37,14 @@ export default function ConferenciaForm({ onSuccess }) {
         usuariosService.buscarOperadores(),
         usuariosService.buscarTecnicos()
       ]);
-      
+
       setOperadores(ops);
       setTecnicos(tecns);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
-      setMensagem({ 
-        tipo: 'aviso', 
-        texto: 'Aviso: Não foi possível carregar a lista de usuários. Você pode inserir os IDs manualmente.' 
+      setMensagem({
+        tipo: 'aviso',
+        texto: 'Aviso: Não foi possível carregar a lista de usuários. Você pode inserir os IDs manualmente.'
       });
     } finally {
       setLoadingUsuarios(false);
@@ -53,7 +57,7 @@ export default function ConferenciaForm({ onSuccess }) {
       ...prev,
       [campo]: valor
     }));
-    
+
     // Limpar erro do campo quando o usuário começar a digitar
     if (erros[campo]) {
       setErros(prev => {
@@ -68,11 +72,11 @@ export default function ConferenciaForm({ onSuccess }) {
   const atualizarPorta = (index, campo, valor) => {
     setConferencia(prev => ({
       ...prev,
-      portas: prev.portas.map((porta, i) => 
+      portas: prev.portas.map((porta, i) =>
         i === index ? { ...porta, [campo]: valor } : porta
       )
     }));
-    
+
     // Limpar erro da porta quando o usuário começar a digitar
     const chaveErro = `porta_${index}_${campo}`;
     if (erros[chaveErro]) {
@@ -106,10 +110,10 @@ export default function ConferenciaForm({ onSuccess }) {
   // Submeter formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validar dados
     const { valido, erros: errosValidacao } = validarConferencia(conferencia);
-    
+
     if (!valido) {
       setErros(errosValidacao);
       setMensagem({ tipo: 'erro', texto: 'Por favor, corrija os erros no formulário.' });
@@ -123,26 +127,26 @@ export default function ConferenciaForm({ onSuccess }) {
     try {
 
 
-        // DEBUG: Exibir o objeto da conferencia no console
+      // DEBUG: Exibir o objeto da conferencia no console
       //console.log('Objeto da conferencia a ser enviado:', conferencia);
       //console.log('tecInterno_id:', conferencia.tecInterno_id, 'tipo:', typeof conferencia.tecInterno_id);
       //console.log('tecExterno_id:', conferencia.tecExterno_id, 'tipo:', typeof conferencia.tecExterno_id);
 
       // Tentar enviar para a API
       await conferenciasService.criarConferencia(conferencia);
-      
+
       setMensagem({ tipo: 'sucesso', texto: MENSAGENS.SUCESSO_CRIAR });
-      
+
       // Resetar formulário
       setConferencia(CONFERENCIA_PADRAO);
-      
+
       // Chamar callback de sucesso se fornecido
       if (onSuccess) {
         setTimeout(() => {
           onSuccess();
         }, 1500);
       }
-      
+
     } catch (error) {
       console.error('Erro ao criar conferência:', error);
       setMensagem({ tipo: 'erro', texto: error.message || MENSAGENS.ERRO_CRIAR });
@@ -161,21 +165,19 @@ export default function ConferenciaForm({ onSuccess }) {
         </CardHeader>
         <CardContent>
           {mensagem.texto && (
-            <Alert className={`mb-6 ${
-              mensagem.tipo === 'sucesso' 
-                ? 'border-green-200 bg-green-50' 
-                : mensagem.tipo === 'aviso'
+            <Alert className={`mb-6 ${mensagem.tipo === 'sucesso'
+              ? 'border-green-200 bg-green-50'
+              : mensagem.tipo === 'aviso'
                 ? 'border-yellow-200 bg-yellow-50'
                 : 'border-red-200 bg-red-50'
-            }`}>
+              }`}>
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className={`${
-                mensagem.tipo === 'sucesso' 
-                  ? 'text-green-800' 
-                  : mensagem.tipo === 'aviso'
+              <AlertDescription className={`${mensagem.tipo === 'sucesso'
+                ? 'text-green-800'
+                : mensagem.tipo === 'aviso'
                   ? 'text-yellow-800'
                   : 'text-red-800'
-              }`}>
+                }`}>
                 {mensagem.texto}
               </AlertDescription>
             </Alert>
@@ -220,83 +222,83 @@ export default function ConferenciaForm({ onSuccess }) {
                 {erros.dataConferencia && <p className="text-red-500 text-sm mt-1">{erros.dataConferencia}</p>}
               </div>
 
-{/* Técnico Interno (Operador) */}
-<div>
-  <Label htmlFor="tecInterno_id">Técnico Interno (Operador) *</Label>
-  {loadingUsuarios ? (
-    <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
-      <Loader className="h-4 w-4 animate-spin" />
-      <span className="text-sm text-gray-600">Carregando operadores...</span>
-    </div>
-  ) : (
-    <Select
-      value={conferencia.tecInterno_id ? conferencia.tecInterno_id.toString() : ''}
-      onValueChange={(value) => {
-        //console.log('Selecionado tecInterno:', value);
-        const numValue = parseInt(value, 10);
-        //console.log('Convertido para número:', numValue, 'isNaN:', isNaN(numValue));
-        if (!isNaN(numValue)) {
-          //console.log('Atualizando tecInterno_id para:', numValue);
-          atualizarCampo('tecInterno_id', numValue); 
-        }
-      }}
-    >
-      <SelectTrigger className={erros.tecInterno_id ? 'border-red-500' : ''}>
-        <SelectValue placeholder="Selecione um operador" />
-      </SelectTrigger>
-      <SelectContent>
-        {operadores.map((operador) => (
-          <SelectItem key={operador.id} value={operador.id.toString()}>
-            {operador.nome} (ID: {operador.id})
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+              {/* Técnico Interno (Operador) */}
+              <div>
+                <Label htmlFor="tecInterno_id">Técnico Interno (Operador) *</Label>
+                {loadingUsuarios ? (
+                  <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
+                    <Loader className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-gray-600">Carregando operadores...</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={conferencia.tecInterno_id ? conferencia.tecInterno_id.toString() : ''}
+                    onValueChange={(value) => {
+                      //console.log('Selecionado tecInterno:', value);
+                      const numValue = parseInt(value, 10);
+                      //console.log('Convertido para número:', numValue, 'isNaN:', isNaN(numValue));
+                      if (!isNaN(numValue)) {
+                        //console.log('Atualizando tecInterno_id para:', numValue);
+                        atualizarCampo('tecInterno_id', numValue);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={erros.tecInterno_id ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Selecione um operador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {operadores.map((operador) => (
+                        <SelectItem key={operador.id} value={operador.id.toString()}>
+                          {operador.nome} (ID: {operador.id})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-  )}
-  {erros.tecInterno_id && (
-    <p className="text-red-500 text-sm mt-1">{erros.tecInterno_id}</p>
-  )}
-</div>
+                )}
+                {erros.tecInterno_id && (
+                  <p className="text-red-500 text-sm mt-1">{erros.tecInterno_id}</p>
+                )}
+              </div>
 
-{/* Técnico Externo */}
-<div className="md:col-span-2">
-  <Label htmlFor="tecExterno_id">Técnico Externo *</Label>
-  {loadingUsuarios ? (
-    <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
-      <Loader className="h-4 w-4 animate-spin" />
-      <span className="text-sm text-gray-600">Carregando técnicos...</span>
-    </div>
-  ) : (
-    <Select
-      value={conferencia.tecExterno_id ? conferencia.tecExterno_id.toString() : ''}
-      onValueChange={(value) => {
-        //console.log('Selecionado tecExterno:', value);
-        const numValue = parseInt(value, 10);
-        //console.log('Convertido para número:', numValue, 'isNaN:', isNaN(numValue));
-        if (!isNaN(numValue)) {
-          //console.log('Atualizando tecExterno_id para:', numValue);
-          atualizarCampo('tecExterno_id', numValue); 
-        }
-      }}
-    >
-      <SelectTrigger className={erros.tecExterno_id ? 'border-red-500' : ''}>
-        <SelectValue placeholder="Selecione um técnico" />
-      </SelectTrigger>
-      <SelectContent>
-        {tecnicos.map((tecnico) => (
-          <SelectItem key={tecnico.id} value={tecnico.id.toString()}>
-            {tecnico.nome} (ID: {tecnico.id})
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+              {/* Técnico Externo */}
+              <div className="md:col-span-2">
+                <Label htmlFor="tecExterno_id">Técnico Externo *</Label>
+                {loadingUsuarios ? (
+                  <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
+                    <Loader className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-gray-600">Carregando técnicos...</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={conferencia.tecExterno_id ? conferencia.tecExterno_id.toString() : ''}
+                    onValueChange={(value) => {
+                      //console.log('Selecionado tecExterno:', value);
+                      const numValue = parseInt(value, 10);
+                      //console.log('Convertido para número:', numValue, 'isNaN:', isNaN(numValue));
+                      if (!isNaN(numValue)) {
+                        //console.log('Atualizando tecExterno_id para:', numValue);
+                        atualizarCampo('tecExterno_id', numValue);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={erros.tecExterno_id ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Selecione um técnico" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tecnicos.map((tecnico) => (
+                        <SelectItem key={tecnico.id} value={tecnico.id.toString()}>
+                          {tecnico.nome} (ID: {tecnico.id})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-  )}
-  {erros.tecExterno_id && (
-    <p className="text-red-500 text-sm mt-1">{erros.tecExterno_id}</p>
-  )}
-</div>
+                )}
+                {erros.tecExterno_id && (
+                  <p className="text-red-500 text-sm mt-1">{erros.tecExterno_id}</p>
+                )}
+              </div>
 
 
               <div className="md:col-span-2">
@@ -333,8 +335,8 @@ export default function ConferenciaForm({ onSuccess }) {
                 {conferencia.portas.map((porta, index) => (
                   <Card key={index} className="p-4">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                      <div>
-                        <Label htmlFor={`porta-${index}-numero`}>Nº Porta *</Label>
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor={`porta-${index}-numero`} className="mb-1">Nº Porta</Label>
                         <Input
                           id={`porta-${index}-numero`}
                           type="number"
@@ -347,8 +349,8 @@ export default function ConferenciaForm({ onSuccess }) {
                         )}
                       </div>
 
-                      <div>
-                        <Label htmlFor={`porta-${index}-cliente`}>Cliente</Label>
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor={`porta-${index}-cliente`} className="mb-1">Cliente</Label>
                         <Input
                           id={`porta-${index}-cliente`}
                           value={porta.cliente}
@@ -357,8 +359,8 @@ export default function ConferenciaForm({ onSuccess }) {
                         />
                       </div>
 
-                      <div>
-                        <Label htmlFor={`porta-${index}-status`}>Status *</Label>
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor={`porta-${index}-status`} className="mb-1">Status</Label>
                         <Select
                           value={porta.status}
                           onValueChange={(value) => atualizarPorta(index, 'status', value)}
@@ -379,14 +381,30 @@ export default function ConferenciaForm({ onSuccess }) {
                         )}
                       </div>
 
-                      <div>
-                        <Label htmlFor={`porta-${index}-plotado`}>Plotado</Label>
-                        <Input
-                          id={`porta-${index}-plotado`}
-                          value={porta.plotado}
-                          onChange={(e) => atualizarPorta(index, 'plotado', e.target.value)}
-                        />
+
+
+                      <div className="flex items-end">
+                        <div className="flex flex-col gap-1">
+                          <Label className="mb-1">Plotado</Label>
+
+                          <Select
+                            value={String(porta.plotado)}
+                            onValueChange={(value) => atualizarPorta (index, "plotado", value === "true")}>
+
+                            <SelectTrigger className="w-32">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="true">Sim</SelectItem>
+                              <SelectItem value="false">Não</SelectItem>
+                            </SelectContent>
+
+                          </Select>
+                        </div>
                       </div>
+
+
 
                       <div className="flex items-end">
                         {conferencia.portas.length > 1 && (
