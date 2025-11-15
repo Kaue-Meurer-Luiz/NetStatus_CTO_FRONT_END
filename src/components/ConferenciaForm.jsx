@@ -249,7 +249,7 @@ export default function ConferenciaForm({ onSuccess }) {
                     <SelectContent>
                       {operadores.map((operador) => (
                         <SelectItem key={operador.id} value={operador.id.toString()}>
-                          {operador.nome} (ID: {operador.id})
+                          {operador.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -288,7 +288,7 @@ export default function ConferenciaForm({ onSuccess }) {
                     <SelectContent>
                       {tecnicos.map((tecnico) => (
                         <SelectItem key={tecnico.id} value={tecnico.id.toString()}>
-                          {tecnico.nome} (ID: {tecnico.id})
+                          {tecnico.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
