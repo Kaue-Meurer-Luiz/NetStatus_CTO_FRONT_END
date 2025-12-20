@@ -10,8 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService, usuariosService } from '../services/api';
 import { validarConferencia } from '../lib/utils';
 import { CONFERENCIA_PADRAO, PORTA_PADRAO, STATUS_OPTIONS, MENSAGENS } from '../lib/constants';
-
-import { Checkbox } from "@/components/ui/checkbox"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 
@@ -195,7 +194,10 @@ export default function ConferenciaForm({ onSuccess }) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Dados Gerais */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border">
+              <div className="md:col-span-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-2">Informações Gerais</h3>
+              </div>
               <div>
                 <Label htmlFor="caixa">Caixa *</Label>
                 <Input
@@ -311,7 +313,7 @@ export default function ConferenciaForm({ onSuccess }) {
               </div>
 
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-3">
                 <Label htmlFor="observacao">Observação</Label>
                 <Textarea
                   id="observacao"
@@ -368,110 +370,92 @@ export default function ConferenciaForm({ onSuccess }) {
                 </div>
               </div>
 
-              {erros.portas && <p className="text-red-500 text-sm mb-4">{erros.portas}</p>}
-
-              <div className="space-y-4">
-                {conferencia.portas.map((porta, index) => (
-                  <Card key={index} className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                      <div className="flex flex-col gap-1">
-                        <Label htmlFor={`porta-${index}-numero`} className="mb-1">Nº Porta</Label>
-                        <Input
-                          id={`porta-${index}-numero`}
-                          type="number"
-                          value={porta.nrPorta}
-                          onChange={(e) => atualizarPorta(index, 'nrPorta', parseInt(e.target.value) || '')}
-                          className={erros[`porta_${index}_nrPorta`] ? 'border-red-500' : ''}
-                        />
-                        {erros[`porta_${index}_nrPorta`] && (
-                          <p className="text-red-500 text-sm mt-1">{erros[`porta_${index}_nrPorta`]}</p>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <Label htmlFor={`porta-${index}-cliente`} className="mb-1">Cliente</Label>
-                        <Input
-                          id={`porta-${index}-cliente`}
-                          value={porta.cliente}
-                          onChange={(e) => atualizarPorta(index, 'cliente', e.target.value)}
-                          placeholder=""
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <Label htmlFor={`porta-${index}-status`} className="mb-1">Status</Label>
-                        <Select
-                          value={porta.status}
-                          onValueChange={(value) => atualizarPorta(index, 'status', value)}
-                        >
-                          <SelectTrigger className={erros[`porta_${index}_status`] ? 'border-red-500' : ''}>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {erros[`porta_${index}_status`] && (
-                          <p className="text-red-500 text-sm mt-1">{erros[`porta_${index}_status`]}</p>
-                        )}
-                      </div>
-
-
-
-                      <div className="flex items-end">
-                        <div className="flex flex-col gap-1">
-                          <Label className="mb-1">Plotado</Label>
-
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow>
+                      <TableHead className="w-20 py-2">Nº Porta</TableHead>
+                      <TableHead className="w-32 py-2">Cliente</TableHead>
+                      <TableHead className="w-44 py-2">Status</TableHead>
+                      <TableHead className="w-24 py-2 text-center">Plotado</TableHead>
+                      <TableHead className="py-2">Observação</TableHead>
+                      <TableHead className="w-12 py-2"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {conferencia.portas.map((porta, index) => (
+                      <TableRow key={index} className="hover:bg-gray-50">
+                        <TableCell className="py-1">
+                          <Input
+                            type="number"
+                            value={porta.nrPorta}
+                            onChange={(e) => atualizarPorta(index, 'nrPorta', parseInt(e.target.value) || '')}
+                            className={`h-8 px-2 ${erros[`porta_${index}_nrPorta`] ? 'border-red-500' : ''}`}
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <Input
+                            value={porta.cliente}
+                            onChange={(e) => atualizarPorta(index, 'cliente', e.target.value)}
+                            placeholder=""
+                            className="h-8 px-2"
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
                           <Select
-                            value={String(porta.plotado)}
-                            onValueChange={(value) => atualizarPorta(index, "plotado", value === "true")}>
-
-                            <SelectTrigger className="w-32">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                              <SelectItem value="true">Sim</SelectItem>
-                              <SelectItem value="false">Não</SelectItem>
-                            </SelectContent>
-
-                          </Select>
-                        </div>
-                      </div>
-
-
-
-                      <div className="flex items-end">
-                        {conferencia.portas.length > 1 && (
-                          <Button
-                            type="button"
-                            onClick={() => removerPorta(index)}
-                            variant="destructive"
-                            size="sm"
-                            className="w-full"
+                            value={porta.status}
+                            onValueChange={(value) => atualizarPorta(index, 'status', value)}
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <Label htmlFor={`porta-${index}-observacao`}>Observação</Label>
-                      <Textarea
-                        id={`porta-${index}-observacao`}
-                        value={porta.observacao}
-                        onChange={(e) => atualizarPorta(index, 'observacao', e.target.value)}
-                        rows={2}
-                      />
-                    </div>
-                  </Card>
-                ))}
+                            <SelectTrigger className={`h-8 ${erros[`porta_${index}_status`] ? 'border-red-500' : ''}`}>
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="py-1 text-center">
+                          <div className="flex justify-center">
+                            <input
+                              type="checkbox"
+                              checked={porta.plotado === true || porta.plotado === 'true'}
+                              onChange={(e) => atualizarPorta(index, 'plotado', e.target.checked)}
+                              className="w-4 h-4 cursor-pointer"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <Input
+                            value={porta.observacao}
+                            onChange={(e) => atualizarPorta(index, 'observacao', e.target.value)}
+                            placeholder="Obs. da porta"
+                            className="h-8 px-2"
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          {conferencia.portas.length > 1 && (
+                            <Button
+                              type="button"
+                              onClick={() => removerPorta(index)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
+
+              {erros.portas && <p className="text-red-500 text-xs p-2 bg-red-50 border-t">{erros.portas}</p>}
             </div>
 
             {/* Botões */}
