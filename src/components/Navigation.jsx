@@ -52,15 +52,7 @@ export default function Navigation() {
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Activity className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Sistema de Conferências
-                </h1>
-                <p className="text-sm text-gray-500">
-                  Gestão de conferências de caixas
-                </p>
-              </div>
+              <img src="/logo.png" alt="Logo" className="h-16 w-32 object-contain absolute" />
             </div>
           </div>
 
@@ -104,10 +96,8 @@ export default function Navigation() {
           <div className="flex items-center justify-between">
             {/* Mobile Logo */}
             <div className="flex items-center space-x-2">
-              <Activity className="h-6 w-6 text-primary" />
-              <span className="text-lg font-bold text-gray-900">
-                Conferências
-              </span>
+              <img src="/logo.png" alt="Logo" className="h-16 w-32 object-contain absolute" />
+              
             </div>
 
             {/* Mobile Menu Button */}
