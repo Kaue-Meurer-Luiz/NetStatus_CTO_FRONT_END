@@ -88,14 +88,24 @@ export default function ConferenciaForm({ onSuccess }) {
     }
   };
 
-  // Adicionar nova porta
-  const adicionarPorta = () => {
-    const proximoNumero = conferencia.portas.length + 1;
-    setConferencia(prev => ({
-      ...prev,
-      portas: [...prev.portas, { ...PORTA_PADRAO, nrPorta: proximoNumero }]
-    }));
+
+  const adicionarMultiplasPortas = (quantidade) => {
+    setConferencia(prev => {
+      const inicio = prev.portas.length + 1;
+
+      const novasPortas = Array.from({ length: quantidade }, (_, i) => ({
+        ...PORTA_PADRAO,
+        nrPorta: inicio + i
+      }));
+
+      return {
+        ...prev,
+        portas: [...prev.portas, ...novasPortas]
+      };
+    });
   };
+
+
 
   // Remover porta
   const removerPorta = (index) => {
@@ -315,18 +325,47 @@ export default function ConferenciaForm({ onSuccess }) {
 
             {/* Portas */}
             <div>
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
                 <h3 className="text-lg font-semibold">Portas</h3>
-                <Button
-                  type="button"
-                  onClick={adicionarPorta}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Adicionar Porta
-                </Button>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => adicionarMultiplasPortas(1)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    1 Porta
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => adicionarMultiplasPortas(8)}
+                  >
+                    +8 Portas
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => adicionarMultiplasPortas(16)}
+                  >
+                    +16 Portas
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => adicionarMultiplasPortas(24)}
+                  >
+                    +24 Portas
+                  </Button>
+                </div>
               </div>
 
               {erros.portas && <p className="text-red-500 text-sm mb-4">{erros.portas}</p>}
@@ -389,7 +428,7 @@ export default function ConferenciaForm({ onSuccess }) {
 
                           <Select
                             value={String(porta.plotado)}
-                            onValueChange={(value) => atualizarPorta (index, "plotado", value === "true")}>
+                            onValueChange={(value) => atualizarPorta(index, "plotado", value === "true")}>
 
                             <SelectTrigger className="w-32">
                               <SelectValue placeholder="Selecione" />

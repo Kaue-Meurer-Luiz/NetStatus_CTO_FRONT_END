@@ -32,7 +32,7 @@ export const CONFERENCIA_PADRAO = {
   observacao: '',
   tecInterno_id: 0,
   tecExterno_id: 0,
-  portas: [{ ...PORTA_PADRAO }]
+  portas: []
 };
 
 // Validação de campos obrigatórios
