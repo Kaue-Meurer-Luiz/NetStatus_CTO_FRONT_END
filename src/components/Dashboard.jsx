@@ -161,46 +161,6 @@ export default function Dashboard({ onNovaConferencia }) {
         limite={5} 
         titulo="Últimas 05 Conferências"
       />
-
-      {/* Ações rápidas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Ações Rápidas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
-              onClick={onNovaConferencia}
-              variant="outline" 
-              className="h-20 flex flex-col items-center justify-center gap-2"
-            >
-              <Plus className="h-6 w-6" />
-              <span>Nova Conferência</span>
-            </Button>
-            
-            <Button 
-              onClick={() => window.location.reload()}
-              variant="outline" 
-              className="h-20 flex flex-col items-center justify-center gap-2"
-            >
-              <Activity className="h-6 w-6" />
-              <span>Atualizar Dados</span>
-            </Button>
-            
-            <Button 
-              onClick={carregarEstatisticas}
-              variant="outline" 
-              className="h-20 flex flex-col items-center justify-center gap-2"
-            >
-              <TrendingUp className="h-6 w-6" />
-              <span>Recalcular Estatísticas</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

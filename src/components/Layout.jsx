@@ -15,10 +15,10 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-gray-500">
-              © 2025 Sistema de Conferências. Desenvolvido para gestão de conferências de caixas.
+              © 2025 Sistema de Conferências. Desenvolvido para gestão de conferências de caixas, por Kaue Meurer Luiz.
             </div>
             <div className="mt-2 md:mt-0 text-sm text-gray-500">
-              Versão 1.0.0
+              Beta
             </div>
           </div>
         </div>
