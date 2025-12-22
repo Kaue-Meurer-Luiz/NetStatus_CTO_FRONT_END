@@ -22,6 +22,11 @@ export default function ConferenciaForm({ onSuccess }) {
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
   const [operadores, setOperadores] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
+   // Estados para detecção de duplicidade
+  const [verificandoDuplicidade, setVerificandoDuplicidade] = useState(false);
+  const [conferenciaAnterior, setConferenciaAnterior] = useState(null);
+  const [alertaDuplicidade, setAlertaDuplicidade] = useState(null);
+  const [confirmadoDuplicidade, setConfirmadoDuplicidade] = useState(false);
 
   // Carregar usuários ao montar o componente
   useEffect(() => {
@@ -162,7 +167,47 @@ export default function ConferenciaForm({ onSuccess }) {
     } finally {
       setLoading(false);
     }
+
+
+    // Função para verificar duplicidade (com debounce de 800ms)
+const verificarCaixaExistente = useCallback(
+  debounce(async (nomeCaixa) => {
+    if (!nomeCaixa || nomeCaixa.length < 3) return;
+
+    setVerificandoDuplicidade(true);
+    try {
+      const resultados = await conferenciasService.buscarPorCaixa(nomeCaixa);
+      
+      if (resultados && resultados.length > 0) {
+        // Ordena para pegar a conferência mais recente
+        const ultima = resultados.sort((a, b) => new Date(b.dataConferencia) - new Date(a.dataConferencia))[0];
+        setConferenciaAnterior(ultima);
+        
+        // Cálculo da diferença de dias
+        const dataUltima = new Date(ultima.dataConferencia);
+        const hoje = new Date();
+        const diffDays = Math.ceil(Math.abs(hoje - dataUltima) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 30) {
+          setAlertaDuplicidade('confirmacao'); // Bloqueia até confirmar
+          setConfirmadoDuplicidade(false);
+        } else {
+          setAlertaDuplicidade('aviso'); // Apenas informa
+          setConfirmadoDuplicidade(true);
+        }
+      }
+    } catch (error) { /* tratamento de erro */ }
+    finally { setVerificandoDuplicidade(false); }
+  }, 800),
+  []
+);
   };
+
+  
+
+  
+
+  
 
   return (
     <div className="max-w-4xl mx-auto p-6">
