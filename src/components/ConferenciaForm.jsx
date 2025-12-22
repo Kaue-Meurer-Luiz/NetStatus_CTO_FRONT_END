@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Save, AlertCircle, Loader } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, Trash2, Save, AlertCircle, AlertTriangle, Info, Eye, Loader } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService, usuariosService } from '../services/api';
-import { validarConferencia } from '../lib/utils';
+import { validarConferencia, debounce, formatarData } from '../lib/utils';
 import { CONFERENCIA_PADRAO, PORTA_PADRAO, STATUS_OPTIONS, MENSAGENS } from '../lib/constants';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -22,11 +22,13 @@ export default function ConferenciaForm({ onSuccess }) {
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
   const [operadores, setOperadores] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
-   // Estados para detecção de duplicidade
+
+  // Estados para detecção de duplicidade
   const [verificandoDuplicidade, setVerificandoDuplicidade] = useState(false);
   const [conferenciaAnterior, setConferenciaAnterior] = useState(null);
   const [alertaDuplicidade, setAlertaDuplicidade] = useState(null);
   const [confirmadoDuplicidade, setConfirmadoDuplicidade] = useState(false);
+
 
   // Carregar usuários ao montar o componente
   useEffect(() => {
@@ -54,6 +56,85 @@ export default function ConferenciaForm({ onSuccess }) {
       setLoadingUsuarios(false);
     }
   };
+
+  // Função de verificação robusta
+  const executarVerificacao = async (nomeCaixa) => {
+    if (!nomeCaixa || nomeCaixa.length < 3) {
+      setConferenciaAnterior(null);
+      setAlertaDuplicidade(null);
+      return;
+    }
+
+    console.log('Buscando duplicidade para caixa:', nomeCaixa);
+    setVerificandoDuplicidade(true);
+
+    try {
+      const resultados = await conferenciasService.buscarPorCaixa(nomeCaixa);
+      console.log('Resultados encontrados:', resultados);
+
+      if (resultados && resultados.length > 0) {
+        const ultima = resultados.sort((a, b) => new Date(b.dataConferencia) - new Date(a.dataConferencia))[0];
+        setConferenciaAnterior(ultima);
+
+        const dataUltima = new Date(ultima.dataConferencia);
+        const hoje = new Date();
+        const diffTime = Math.abs(hoje - dataUltima);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        console.log('Diferença em dias:', diffDays);
+
+        if (diffDays <= 30) {
+          setAlertaDuplicidade('confirmacao');
+          setConfirmadoDuplicidade(false);
+        } else {
+          setAlertaDuplicidade('aviso');
+          setConfirmadoDuplicidade(true);
+        }
+      } else {
+        setAlertaDuplicidade(null);
+        setConferenciaAnterior(null);
+      }
+    } catch (error) {
+      console.error('Erro na busca de duplicidade:', error);
+    } finally {
+      setVerificandoDuplicidade(false);
+    }
+  };
+
+  // Visualizar detalhes da conferência
+  const visualizarDetalhes = (conferencia) => {
+    setConferenciaAnterior(conferencia);
+  };
+
+
+
+
+
+
+
+  // Debounce para digitação (500ms)
+  const verificarDebounced = useCallback(
+    debounce((val) => executarVerificacao(val), 500),
+    []
+  );
+
+  const atualizarCampoCaixa = (campo, valor) => {
+    setConferencia(prev => ({ ...prev, [campo]: valor }));
+
+    if (campo === 'caixa') {
+      verificarDebounced(valor);
+    }
+
+    if (erros[campo]) {
+      setErros(prev => {
+        const novosErros = { ...prev };
+        delete novosErros[campo];
+        return novosErros;
+      });
+    }
+  };
+
+
 
   // Atualizar campo da conferência
   const atualizarCampo = (campo, valor) => {
@@ -167,47 +248,13 @@ export default function ConferenciaForm({ onSuccess }) {
     } finally {
       setLoading(false);
     }
-
-
-    // Função para verificar duplicidade (com debounce de 800ms)
-const verificarCaixaExistente = useCallback(
-  debounce(async (nomeCaixa) => {
-    if (!nomeCaixa || nomeCaixa.length < 3) return;
-
-    setVerificandoDuplicidade(true);
-    try {
-      const resultados = await conferenciasService.buscarPorCaixa(nomeCaixa);
-      
-      if (resultados && resultados.length > 0) {
-        // Ordena para pegar a conferência mais recente
-        const ultima = resultados.sort((a, b) => new Date(b.dataConferencia) - new Date(a.dataConferencia))[0];
-        setConferenciaAnterior(ultima);
-        
-        // Cálculo da diferença de dias
-        const dataUltima = new Date(ultima.dataConferencia);
-        const hoje = new Date();
-        const diffDays = Math.ceil(Math.abs(hoje - dataUltima) / (1000 * 60 * 60 * 24));
-        
-        if (diffDays <= 30) {
-          setAlertaDuplicidade('confirmacao'); // Bloqueia até confirmar
-          setConfirmadoDuplicidade(false);
-        } else {
-          setAlertaDuplicidade('aviso'); // Apenas informa
-          setConfirmadoDuplicidade(true);
-        }
-      }
-    } catch (error) { /* tratamento de erro */ }
-    finally { setVerificandoDuplicidade(false); }
-  }, 800),
-  []
-);
   };
 
-  
 
-  
 
-  
+
+
+
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -237,22 +284,59 @@ const verificarCaixaExistente = useCallback(
             </Alert>
           )}
 
+           {/* ALERTA DE DUPLICIDADE */}
+          {alertaDuplicidade && conferenciaAnterior && (
+            <Alert className={`mb-6 border-2 animate-in fade-in slide-in-from-top-2 duration-300 ${
+              alertaDuplicidade === 'confirmacao' ? 'border-orange-300 bg-orange-50' : 'border-blue-200 bg-blue-50'
+            }`}>
+              {alertaDuplicidade === 'confirmacao' ? <AlertTriangle className="h-5 w-5 text-orange-600" /> : <Info className="h-5 w-5 text-blue-600" />}
+              <AlertTitle className={`font-bold ${alertaDuplicidade === 'confirmacao' ? 'text-orange-800' : 'text-blue-800'}`}>
+                {alertaDuplicidade === 'confirmacao' ? 'Atenção: Caixa conferida recentemente!' : 'Informação: Caixa já conferida'}
+              </AlertTitle>
+              <AlertDescription className="mt-2">
+                <p className="text-sm">
+                  Esta caixa foi conferida em <strong>{formatarData(conferenciaAnterior.dataConferencia)}</strong>.
+                </p>
+                {alertaDuplicidade === 'confirmacao' && (
+                  <div className="flex items-center gap-3 mt-3 p-2 bg-white rounded border border-orange-200">
+                    <input 
+                      type="checkbox" 
+                      id="confirmar-dup" 
+                      checked={confirmadoDuplicidade}
+                      onChange={(e) => setConfirmadoDuplicidade(e.target.checked)}
+                      className="h-4 w-4 cursor-pointer"
+                    />
+                    <Label htmlFor="confirmar-dup" className="text-orange-900 font-medium cursor-pointer">
+                      Estou ciente e desejo realizar uma nova conferência.
+                    </Label>
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Dados Gerais */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border">
               <div className="md:col-span-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-2">Informações Gerais</h3>
               </div>
-              <div>
-                <Label htmlFor="caixa">Caixa *</Label>
-                <Input
-                  id="caixa"
-                  value={conferencia.caixa}
-                  onChange={(e) => atualizarCampo('caixa', e.target.value)}
-                  placeholder=""
-                  className={erros.caixa ? 'border-red-500' : ''}
-                />
-                {erros.caixa && <p className="text-red-500 text-sm mt-1">{erros.caixa}</p>}
+              <div className="relative">
+                <Label htmlFor="caixa" className="font-semibold">Caixa *</Label>
+                <div className="relative">
+                  <Input
+                    id="caixa"
+                    value={conferencia.caixa}
+                    onChange={(e) => atualizarCampo('caixa', e.target.value)}
+                    onBlur={(e) => executarVerificacao(e.target.value)} // Verifica também ao sair do campo
+                    className={erros.caixa ? 'border-red-500' : ''}
+                  />
+                  {verificandoDuplicidade && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader className="h-4 w-4 animate-spin text-gray-400" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -513,12 +597,7 @@ const verificarCaixaExistente = useCallback(
               >
                 Limpar
               </Button>
-              <Button
-                type="submit"
-                disabled={loading || loadingUsuarios}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
+              <Button type="submit" disabled={loading || (alertaDuplicidade === 'confirmacao' && !confirmadoDuplicidade)} className="min-w-[150px]">
                 {loading ? 'Salvando...' : 'Salvar Conferência'}
               </Button>
             </div>

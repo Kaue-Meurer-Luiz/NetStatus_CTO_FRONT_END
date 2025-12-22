@@ -63,6 +63,16 @@ export const conferenciasService = {
     return [];
   }
 },
+// Buscar conferências por nome da caixa
+  buscarPorCaixa: async (caixa) => {
+    try {
+      const conferencias = await conferenciasService.buscarConferencias();
+      return conferencias.filter(c => c.caixa && c.caixa.toLowerCase() === caixa.toLowerCase());
+    } catch (error) {
+      console.error('Erro ao buscar conferências por caixa:', error);
+      return [];
+    }
+  }
 
 
 };
@@ -114,5 +124,6 @@ buscarTecnicos: async () => {
     }
   }
 };
+
 
 export default api;
