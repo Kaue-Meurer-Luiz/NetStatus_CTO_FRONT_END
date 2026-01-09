@@ -29,7 +29,10 @@ export default function Dashboard({ onNovaConferencia }) {
     setLoading(true);
     
     try {
-      const conferencias = await conferenciasService.buscarConferencias();
+      // AJUSTE AQUI: Como a API agora é paginada, buscamos uma quantidade maior 
+      // para calcular as estatísticas corretamente.
+      const data = await conferenciasService.buscarConferenciasPaginado(0, 1000);
+      const conferencias = data.content || []; // Extraímos a lista do .content
       
       // Calcular estatísticas
       const agora = new Date();
@@ -48,7 +51,7 @@ export default function Dashboard({ onNovaConferencia }) {
       );
       
       setEstatisticas({
-        total: conferencias.length,
+        total: data.totalElements || conferencias.length, // Usamos o total real da API
         esteMes: conferenciasMes.length,
         totalPortas,
         cidadesAtendidas: cidadesUnicas.size
@@ -157,6 +160,7 @@ export default function Dashboard({ onNovaConferencia }) {
       </div>
 
       {/* Últimas conferências */}
+      {/* O componente ConferenciasList agora deve saber lidar com o limite de 5 */}
       <ConferenciasList 
         limite={5} 
         titulo="Últimas 05 Conferências"

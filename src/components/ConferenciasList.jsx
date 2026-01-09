@@ -4,14 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Eye, Calendar, MapPin, User, AlertCircle } from 'lucide-react';
+import { Search, Eye, Calendar, MapPin, User, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService } from '../services/api';
 import { formatarDataHora, formatarData, getCorStatus, filtrarConferencias, debounce, formatarBooleano } from '../lib/utils';
 import { MENSAGENS } from '../lib/constants';
-
-//console.log('Valor de formatarBooleano:', formatarBooleano); 
-
 
 export default function ConferenciasList({ limite = null, titulo = "Conferências" }) {
   const [conferencias, setConferencias] = useState([]);
@@ -20,6 +17,11 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
   const [erro, setErro] = useState('');
   const [termoBusca, setTermoBusca] = useState('');
   const [conferenciaSelecionada, setConferenciaSelecionada] = useState(null);
+
+  // Estados da Paginação (usados apenas quando não há limite)
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
+  const [totalElementos, setTotalElementos] = useState(0);
 
   // Debounced search function
   const buscarDebounced = debounce((termo) => {
@@ -33,17 +35,22 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
     setErro('');
     
     try {
-      let dados = await conferenciasService.buscarConferencias();
-      
-      // Se há limite, aplicar (para últimas 05 conferências)
       if (limite) {
-        dados = dados
-          .sort((a, b) => new Date(b.dataConferencia) - new Date(a.dataConferencia))
-          .slice(0, limite);
+        // LÓGICA PARA O DASHBOARD (Lista Simples)
+        const dados = await conferenciasService.buscarUltimasConferencias();
+        // O Dashboard já pede as últimas 5, mas garantimos o slice por segurança
+        const final = dados.slice(0, limite);
+        setConferencias(final);
+        setConferenciasFiltradas(final);
+      } else {
+        // LÓGICA PARA LISTAGEM COMPLETA (Paginada)
+        const data = await conferenciasService.buscarConferenciasPaginado(paginaAtual, 10);
+        const lista = data.content || [];
+        setConferencias(lista);
+        setConferenciasFiltradas(lista);
+        setTotalPaginas(data.totalPages || 0);
+        setTotalElementos(data.totalElements || 0);
       }
-      
-      setConferencias(dados);
-      setConferenciasFiltradas(dados);
     } catch (error) {
       console.error('Erro ao carregar conferências:', error);
       setErro(MENSAGENS.ERRO_CARREGAR);
@@ -52,39 +59,28 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
     }
   };
 
-  // Efeito para carregar dados na inicialização
+  // Efeito para carregar dados na inicialização e quando a página muda
   useEffect(() => {
     carregarConferencias();
-  }, [limite]);
+  }, [limite, paginaAtual]);
 
   // Efeito para busca
   useEffect(() => {
     buscarDebounced(termoBusca);
   }, [termoBusca, conferencias]);
 
-  // Visualizar detalhes da conferência
   const visualizarDetalhes = (conferencia) => {
     setConferenciaSelecionada(conferencia);
   };
 
-  // Fechar detalhes
   const fecharDetalhes = () => {
     setConferenciaSelecionada(null);
   };
 
-  // Função para obter o nome do técnico (usa o objeto completo)
   const obterNomeTecnico = (tecnico) => {
     if (!tecnico) return 'N/A';
-    if (typeof tecnico === 'object' && tecnico.nome) {
-      return tecnico.nome;
-    }
-    // Fallback para exibir o ID se o nome não estiver presente, mas o ID sim
-    if (typeof tecnico === 'object' && tecnico.id) {
-      return `ID: ${tecnico.id}`;
-    }
-    return 'N/A';
+    return typeof tecnico === 'object' && tecnico.nome ? tecnico.nome : (tecnico.id ? `ID: ${tecnico.id}` : 'N/A');
   };
-
 
   if (loading) {
     return (
@@ -113,7 +109,6 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
             </Alert>
           )}
 
-          {/* Barra de busca */}
           {!limite && (
             <div className="mb-6">
               <div className="relative">
@@ -128,11 +123,10 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
             </div>
           )}
 
-          {/* Lista de conferências */}
           {conferenciasFiltradas.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {conferencias.length === 0 
-                ? 'Nenhuma conferência encontrada. Crie sua primeira conferência!'
+                ? 'Nenhuma conferência encontrada.'
                 : 'Nenhuma conferência encontrada para os critérios de busca.'
               }
             </div>
@@ -184,7 +178,6 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
                       </Button>
                     </div>
 
-                    {/* Preview das portas */}
                     <div className="flex flex-wrap gap-2">
                       {conferencia.portas?.slice(0, 5).map((porta, portaIndex) => (
                         <Badge
@@ -207,16 +200,49 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
             </div>
           )}
 
-          {/* Botão para recarregar */}
-          <div className="flex justify-center mt-6">
-            <Button onClick={carregarConferencias} variant="outline">
-              Atualizar Lista
-            </Button>
-          </div>
+          {/* CONTROLES DE PAGINAÇÃO (Apenas se não houver limite) */}
+          {!limite && totalPaginas > 1 && (
+            <div className="flex items-center justify-between mt-8 pt-4 border-t">
+              <div className="text-sm text-gray-500">
+                Total de <strong>{totalElementos}</strong> conferências
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium">
+                  Página {paginaAtual + 1} de {totalPaginas}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPaginaAtual(prev => Math.max(0, prev - 1))}
+                    disabled={paginaAtual === 0}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPaginaAtual(prev => prev + 1)}
+                    disabled={paginaAtual >= totalPaginas - 1}
+                  >
+                    Próxima <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Botão para recarregar (Apenas no Dashboard) */}
+          {limite && (
+            <div className="flex justify-center mt-6">
+              <Button onClick={carregarConferencias} variant="outline">
+                Atualizar Lista
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Modal de detalhes */}
       {conferenciaSelecionada && (
         <ConferenciaDetalhes
           conferencia={conferenciaSelecionada}
@@ -228,7 +254,6 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
   );
 }
 
-// Componente para exibir detalhes da conferência
 function ConferenciaDetalhes({ conferencia, onClose, obterNomeTecnico }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -245,7 +270,6 @@ function ConferenciaDetalhes({ conferencia, onClose, obterNomeTecnico }) {
             </div>
           </CardHeader>
           <CardContent className="p-6">
-            {/* Informações gerais */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="text-sm font-medium text-gray-500">Caixa</label>
@@ -273,7 +297,6 @@ function ConferenciaDetalhes({ conferencia, onClose, obterNomeTecnico }) {
               )}
             </div>
 
-            {/* Tabela de portas */}
             <div>
               <h3 className="text-lg font-semibold mb-4">
                 Portas ({conferencia.portas?.length || 0})

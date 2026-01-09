@@ -42,44 +42,56 @@ export const conferenciasService = {
     }
   },
 
-  // Buscar todas as conferências
-  buscarConferencias: async () => {
+  // 1. NOVO MÉTODO: Buscar conferências PAGINADAS (Para a listagem completa)
+  buscarConferenciasPaginado: async (page = 0, size = 10) => {
     try {
-      const res = await api.get('/conferencias/listar');
-      return res.data;
+      const res = await api.get(`/conferencias/listar?page=${page}&size=${size}`);
+      return res.data; // Retorna o objeto Page (content, totalPages, etc.)
     } catch (error) {
-      console.error('Erro ao buscar conferências:', error);
+      console.error('Erro ao buscar conferências paginadas:', error);
+      return { content: [], totalPages: 0, totalElements: 0 };
+    }
+  },
+
+  // 2. AJUSTADO: Buscar as 5 mais recentes (Para o Dashboard)
+  // Mantemos o endpoint /ultimas, mas garantimos que retorne um array
+  buscarUltimasConferencias: async () => {
+    try {
+      const response = await api.get('/conferencias/ultimas');
+      // Se a API retornar um Page, extraímos o content. Se for lista, usamos direto.
+      return Array.isArray(response.data) ? response.data : (response.data.content || []);
+    } catch (error) {
+      console.error('Erro ao buscar últimas conferências:', error);
       return [];
     }
   },
 
-  // Buscar as 5 mais recentes
-  buscarUltimasConferencias: async () => {
-  try {
-    const response = await api.get('/conferencias/ultimas');
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar últimas conferências:', error);
-    return [];
-  }
-},
-// Buscar conferências por nome da caixa
+  // 3. AJUSTADO: Buscar conferências por nome da caixa (Para duplicidade)
+  // Agora usa o método paginado com um tamanho maior para garantir a busca
   buscarPorCaixa: async (caixa) => {
     try {
-      const conferencias = await conferenciasService.buscarConferencias();
-      return conferencias.filter(c => c.caixa && c.caixa.toLowerCase() === caixa.toLowerCase());
+      const data = await conferenciasService.buscarConferenciasPaginado(0, 100);
+      const lista = data.content || [];
+      return lista.filter(c => c.caixa && c.caixa.toLowerCase().trim() === caixa.toLowerCase().trim());
     } catch (error) {
       console.error('Erro ao buscar conferências por caixa:', error);
       return [];
     }
+  },
+
+  // Método legado (opcional, para evitar quebras em outros lugares)
+  buscarConferencias: async () => {
+    try {
+      const data = await conferenciasService.buscarConferenciasPaginado(0, 1000);
+      return data.content || [];
+    } catch (error) {
+      return [];
+    }
   }
-
-
 };
 
 // Serviço de Usuários
 export const usuariosService = {
-  // Buscar todos os usuários
   buscarTodos: async () => {
     try {
       const response = await api.get('/usuarios');
@@ -90,30 +102,26 @@ export const usuariosService = {
     }
   },
 
-  // Buscar usuários por função (Operador ou Técnico)
-buscarPorFuncao: async (funcao) => {
-  try {
-    const usuarios = await usuariosService.buscarTodos();
-    return usuarios.filter(usuario =>
-      usuario.funcao?.toLowerCase() === funcao.toLowerCase()
-    );
-  } catch (error) {
-    console.error(`Erro ao buscar usuários com função ${funcao}:`, error);
-    return [];
-  }
-},
+  buscarPorFuncao: async (funcao) => {
+    try {
+      const usuarios = await usuariosService.buscarTodos();
+      return usuarios.filter(usuario =>
+        usuario.funcao?.toLowerCase() === funcao.toLowerCase()
+      );
+    } catch (error) {
+      console.error(`Erro ao buscar usuários com função ${funcao}:`, error);
+      return [];
+    }
+  },
 
-// Buscar operadores (técnicos internos)
-buscarOperadores: async () => {
-  return usuariosService.buscarPorFuncao('Operador');
-},
+  buscarOperadores: async () => {
+    return usuariosService.buscarPorFuncao('Operador');
+  },
 
-// Buscar técnicos (técnicos externos)
-buscarTecnicos: async () => {
-  return usuariosService.buscarPorFuncao('Técnico');
-},
+  buscarTecnicos: async () => {
+    return usuariosService.buscarPorFuncao('Técnico');
+  },
 
-// Buscar usuário por ID
   buscarPorId: async (id) => {
     try {
       const response = await api.get(`/usuarios/id/${id}`);
@@ -124,6 +132,5 @@ buscarTecnicos: async () => {
     }
   }
 };
-
 
 export default api;
