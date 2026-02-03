@@ -43,12 +43,18 @@ export const conferenciasService = {
   },
 
   // 1. NOVO MÉTODO: Buscar conferências PAGINADAS (Para a listagem completa)
-  buscarConferenciasPaginado: async (page = 0, size = 10) => {
+  buscarConferenciasPaginado: async (page = 0, size = 10, caixa = '') => {
     try {
-      const res = await api.get(`/conferencias/listar?page=${page}&size=${size}`);
-      return res.data; // Retorna o objeto Page (content, totalPages, etc.)
+      let url = `/conferencias/listar?page=${page}&size=${size}`;
+      
+      if (caixa) {
+        url += `&caixa=${encodeURIComponent(caixa)}`;
+      }
+      
+      const res = await api.get(url);
+      return res.data; 
     } catch (error) {
-      console.error('Erro ao buscar conferências paginadas:', error);
+      console.error('Erro ao buscar conferências:', error);
       return { content: [], totalPages: 0, totalElements: 0 };
     }
   },

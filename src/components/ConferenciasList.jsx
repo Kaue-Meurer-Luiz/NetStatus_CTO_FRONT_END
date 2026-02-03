@@ -7,67 +7,85 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Eye, Calendar, MapPin, User, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService } from '../services/api';
-import { formatarDataHora, formatarData, getCorStatus, filtrarConferencias, debounce, formatarBooleano } from '../lib/utils';
+import { formatarDataHora, formatarData, getCorStatus, formatarBooleano } from '../lib/utils';
 import { MENSAGENS } from '../lib/constants';
 
 export default function ConferenciasList({ limite = null, titulo = "Conferências" }) {
   const [conferencias, setConferencias] = useState([]);
-  const [conferenciasFiltradas, setConferenciasFiltradas] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingInicial, setLoadingInicial] = useState(true);
+  const [loadingLista, setLoadingLista] = useState(false);
   const [erro, setErro] = useState('');
-  const [termoBusca, setTermoBusca] = useState('');
   const [conferenciaSelecionada, setConferenciaSelecionada] = useState(null);
+  const [filtros, setFiltros] = useState({});
+  const [textoBusca, setTextoBusca] = useState('');
+
+
 
   // Estados da Paginação (usados apenas quando não há limite)
   const [paginaAtual, setPaginaAtual] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(0);
   const [totalElementos, setTotalElementos] = useState(0);
 
-  // Debounced search function
-  const buscarDebounced = debounce((termo) => {
-    const filtradas = filtrarConferencias(conferencias, termo);
-    setConferenciasFiltradas(filtradas);
-  }, 300);
+
 
   // Carregar conferências
-  const carregarConferencias = async () => {
-    setLoading(true);
-    setErro('');
-    
-    try {
-      if (limite) {
-        // LÓGICA PARA O DASHBOARD (Lista Simples)
-        const dados = await conferenciasService.buscarUltimasConferencias();
-        // O Dashboard já pede as últimas 5, mas garantimos o slice por segurança
-        const final = dados.slice(0, limite);
-        setConferencias(final);
-        setConferenciasFiltradas(final);
-      } else {
-        // LÓGICA PARA LISTAGEM COMPLETA (Paginada)
-        const data = await conferenciasService.buscarConferenciasPaginado(paginaAtual, 10);
-        const lista = data.content || [];
-        setConferencias(lista);
-        setConferenciasFiltradas(lista);
-        setTotalPaginas(data.totalPages || 0);
-        setTotalElementos(data.totalElements || 0);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar conferências:', error);
-      setErro(MENSAGENS.ERRO_CARREGAR);
-    } finally {
-      setLoading(false);
+  const carregarConferencias = async (isFiltro = false) => {
+  if (loadingInicial) {
+    setLoadingInicial(true);
+  } else if (!isFiltro) {
+    setLoadingLista(true);
+  }
+
+  setErro('');
+
+  try {
+    if (limite) {
+      const dados = await conferenciasService.buscarUltimasConferencias();
+      setConferencias(dados.slice(0, limite));
+    } else {
+      const data = await conferenciasService.buscarConferenciasPaginado(
+        paginaAtual,
+        10,
+        filtros?.caixa || ''
+      );
+
+      setConferencias(data.content || []);
+      setTotalPaginas(data.totalPages || 0);
+      setTotalElementos(data.totalElements || 0);
     }
-  };
+  } catch (error) {
+    setErro(MENSAGENS.ERRO_CARREGAR);
+  } finally {
+    setLoadingInicial(false);
+    setLoadingLista(false);
+  }
+};
+
+
+
+useEffect(() => {
+  const timeout = setTimeout(() => {
+    setPaginaAtual(0);
+
+    if (textoBusca.trim() === '') {
+      setFiltros({});
+    } else {
+      setFiltros({ caixa: textoBusca });
+    }
+
+    carregarConferencias(true); // 👈 flag de filtro
+  }, 400);
+
+  return () => clearTimeout(timeout);
+}, [textoBusca]);
+
+
 
   // Efeito para carregar dados na inicialização e quando a página muda
   useEffect(() => {
-    carregarConferencias();
-  }, [limite, paginaAtual]);
+  carregarConferencias();
+}, [limite, paginaAtual, filtros]);
 
-  // Efeito para busca
-  useEffect(() => {
-    buscarDebounced(termoBusca);
-  }, [termoBusca, conferencias]);
 
   const visualizarDetalhes = (conferencia) => {
     setConferenciaSelecionada(conferencia);
@@ -82,7 +100,7 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
     return typeof tecnico === 'object' && tecnico.nome ? tecnico.nome : (tecnico.id ? `ID: ${tecnico.id}` : 'N/A');
   };
 
-  if (loading) {
+  if (loadingInicial) {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -114,16 +132,18 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar por caixa, cidade, cliente, status..."
-                  value={termoBusca}
-                  onChange={(e) => setTermoBusca(e.target.value)}
-                  className="pl-10"
-                />
+  placeholder="Buscar por caixa..."
+  value={textoBusca}
+  onChange={(e) => setTextoBusca(e.target.value)}
+  className="pl-10"
+/>
+
               </div>
             </div>
           )}
+          
 
-          {conferenciasFiltradas.length === 0 ? (
+          {conferencias.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {conferencias.length === 0 
                 ? 'Nenhuma conferência encontrada.'
@@ -132,7 +152,7 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
             </div>
           ) : (
             <div className="space-y-4">
-              {conferenciasFiltradas.map((conferencia, index) => (
+              {conferencias.map((conferencia, index) => (
                 <Card key={conferencia.idConferencia || index} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
