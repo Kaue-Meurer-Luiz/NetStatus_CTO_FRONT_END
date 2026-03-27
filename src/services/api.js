@@ -120,21 +120,32 @@ export const usuariosService = {
     }
   },
 
+  buscarUsuariosPorTermo: async (termo = '') => {
+    try {
+      const res = await api.get(`/usuarios/buscar?termo=${encodeURIComponent(termo)}`);
+      return res.data; // Retorna a lista de usuários filtrada pelo Backend
+    } catch (error) {
+      console.error('Erro ao buscar usuários por termo:', error);
+      return [];
+    }
+  },
+
+  // Mantém os outros métodos para compatibilidade
   buscarOperadores: async () => {
-    return usuariosService.buscarPorFuncao('Operador');
+    try {
+      const res = await api.get('/usuarios');
+      return res.data.filter(u => u.funcao?.toLowerCase() === 'operador');
+    } catch (error) {
+      return [];
+    }
   },
 
   buscarTecnicos: async () => {
-    return usuariosService.buscarPorFuncao('Técnico');
-  },
-
-  buscarPorId: async (id) => {
     try {
-      const response = await api.get(`/usuarios/id/${id}`);
-      return response.data;
+      const res = await api.get('/usuarios');
+      return res.data.filter(u => u.funcao?.toLowerCase() === 'técnico');
     } catch (error) {
-      console.error(`Erro ao buscar usuário com ID ${id}:`, error);
-      return null;
+      return [];
     }
   }
 };

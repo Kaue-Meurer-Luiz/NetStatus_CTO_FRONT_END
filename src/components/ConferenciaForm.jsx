@@ -1,27 +1,163 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Save, AlertCircle, AlertTriangle, Info, Eye, Loader } from 'lucide-react';
+import { Plus, Trash2, Save, AlertCircle, AlertTriangle, Info, Eye, Loader, Check, ChevronsUpDown, Loader2, Search } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { cn } from "@/lib/utils"
+import { Command, CommandGroup, CommandItem, CommandList, } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover"
 import { conferenciasService, usuariosService } from '../services/api';
 import { validarConferencia, debounce, formatarData } from '../lib/utils';
 import { CONFERENCIA_PADRAO, PORTA_PADRAO, STATUS_OPTIONS, MENSAGENS } from '../lib/constants';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+// Componente Combobox com Busca via API (Backend)
+function ComboboxUsuarioAPI({
+  value,
+  onChange,
+  placeholder = "Selecione um usuário...",
+  funcaoFiltro = null // 'Operador' ou 'Técnico'
+}) {
+  const [open, setOpen] = useState(false)
+  const [termo, setTermo] = useState("")
+  const [usuarios, setUsuarios] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null)
+  const inputRef = useRef(null)
+  const handleInputChange = (e) => {
+    const novoValor = e.target.value;
+    setTermo(novoValor);
+    setUsuarioSelecionado(null);
+  };
 
+  // Carregar usuários por termo via API
+  const carregarUsuarios = useCallback(async (termoBusca = "") => {
+    setLoading(true)
+    try {
+      // Usa o novo endpoint /usuarios/buscar?termo=...
+      const data = await usuariosService.buscarUsuariosPorTermo(termoBusca)
+
+      // Filtra pela função no Front-end (caso o Backend retorne todos)
+      const filtrados = funcaoFiltro
+        ? data.filter(u => u.funcao?.toLowerCase() === funcaoFiltro.toLowerCase())
+        : data
+
+      setUsuarios(filtrados)
+
+      // Se já houver um valor selecionado, tenta encontrar o objeto para exibir o nome
+      if (value && !usuarioSelecionado) {
+        const selecionado = filtrados.find(u => String(u.id) === String(value))
+        if (selecionado) setUsuarioSelecionado(selecionado)
+      }
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [value, funcaoFiltro, usuarioSelecionado])
+
+  // Efeito para busca com debounce manual
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (open) carregarUsuarios(termo)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [termo, open, carregarUsuarios])
+
+  // Carregar inicial para mostrar o nome do usuário já selecionado (se houver)
+  useEffect(() => {
+    if (value && !usuarioSelecionado) {
+      carregarUsuarios("")
+    }
+  }, [value, usuarioSelecionado, carregarUsuarios])
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen)
+
+        if (isOpen) {
+          setTimeout(() => {
+            inputRef.current?.focus()
+          }, 0)
+        }
+      }}
+    >
+      <PopoverTrigger asChild>
+        <div className="relative w-full">
+          <Input
+            ref={inputRef}
+            value={termo}
+            onChange={handleInputChange}
+            placeholder={placeholder}
+            className="pr-10 bg-white"
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            ) : (
+              <Search className="h-4 w-4 text-gray-400" />
+            )}
+          </div>
+        </div>
+      </PopoverTrigger>
+
+      {/* O PopoverContent garante que a lista feche ao clicar fora */}
+      <PopoverContent
+        className="p-0 w-[--radix-popover-trigger-width] shadow-xl border border-gray-200 bg-white"
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()} // Evita que o foco saia do input ao abrir
+      >
+        <Command shouldFilter={false}>
+          <CommandList className="max-h-60 overflow-y-auto">
+            {usuarios.length === 0 && !loading && (
+              <div className="p-4 text-sm text-gray-500 text-center">Nenhum usuário encontrado.</div>
+            )}
+            <CommandGroup>
+              {usuarios.map((usuario) => (
+                <CommandItem
+                  key={usuario.id}
+                  value={usuario.nome}
+                  onSelect={() => {
+                    setUsuarioSelecionado(usuario)
+                    setTermo(usuario.nome)
+                    onChange(usuario.id)
+                    setOpen(false)
+                  }}
+                  className="cursor-pointer hover:bg-blue-50 py-2 px-3 flex items-center justify-between"
+                >
+                  <div className="flex items-center">
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4 text-blue-600",
+                        String(value) === String(usuario.id) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <span className="font-medium">{usuario.nome}</span>
+                  </div>
+                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                    {usuario.funcao}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 export default function ConferenciaForm({ onSuccess }) {
   const [conferencia, setConferencia] = useState(CONFERENCIA_PADRAO);
   const [loading, setLoading] = useState(false);
-  const [loadingUsuarios, setLoadingUsuarios] = useState(true);
   const [erros, setErros] = useState({});
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
-  const [operadores, setOperadores] = useState([]);
-  const [tecnicos, setTecnicos] = useState([]);
 
   // Estados para detecção de duplicidade
   const [verificandoDuplicidade, setVerificandoDuplicidade] = useState(false);
@@ -29,35 +165,7 @@ export default function ConferenciaForm({ onSuccess }) {
   const [alertaDuplicidade, setAlertaDuplicidade] = useState(null);
   const [confirmadoDuplicidade, setConfirmadoDuplicidade] = useState(false);
 
-
-  // Carregar usuários ao montar o componente
-  useEffect(() => {
-    carregarUsuarios();
-  }, []);
-
-  // Carregar usuários da API
-  const carregarUsuarios = async () => {
-    setLoadingUsuarios(true);
-    try {
-      const [ops, tecns] = await Promise.all([
-        usuariosService.buscarOperadores(),
-        usuariosService.buscarTecnicos()
-      ]);
-
-      setOperadores(ops);
-      setTecnicos(tecns);
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-      setMensagem({
-        tipo: 'aviso',
-        texto: 'Aviso: Não foi possível carregar a lista de usuários. Você pode inserir os IDs manualmente.'
-      });
-    } finally {
-      setLoadingUsuarios(false);
-    }
-  };
-
-  // Função de verificação robusta
+  // Função de verificação robusta de duplicidade
   const executarVerificacao = async (nomeCaixa) => {
     if (!nomeCaixa || nomeCaixa.length < 3) {
       setConferenciaAnterior(null);
@@ -65,13 +173,9 @@ export default function ConferenciaForm({ onSuccess }) {
       return;
     }
 
-    console.log('Buscando duplicidade para caixa:', nomeCaixa);
     setVerificandoDuplicidade(true);
-
     try {
       const resultados = await conferenciasService.buscarPorCaixa(nomeCaixa);
-      console.log('Resultados encontrados:', resultados);
-
       if (resultados && resultados.length > 0) {
         const ultima = resultados.sort((a, b) => new Date(b.dataConferencia) - new Date(a.dataConferencia))[0];
         setConferenciaAnterior(ultima);
@@ -80,8 +184,6 @@ export default function ConferenciaForm({ onSuccess }) {
         const hoje = new Date();
         const diffTime = Math.abs(hoje - dataUltima);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        console.log('Diferença em dias:', diffDays);
 
         if (diffDays <= 30) {
           setAlertaDuplicidade('confirmacao');
@@ -101,18 +203,7 @@ export default function ConferenciaForm({ onSuccess }) {
     }
   };
 
-  // Visualizar detalhes da conferência
-  const visualizarDetalhes = (conferencia) => {
-    setConferenciaAnterior(conferencia);
-  };
-
-
-
-
-
-
-
-  // Debounce para digitação (500ms)
+  // Debounce para digitação da caixa
   const verificarDebounced = useCallback(
     debounce((val) => executarVerificacao(val), 500),
     []
@@ -120,11 +211,7 @@ export default function ConferenciaForm({ onSuccess }) {
 
   const atualizarCampoCaixa = (campo, valor) => {
     setConferencia(prev => ({ ...prev, [campo]: valor }));
-
-    if (campo === 'caixa') {
-      verificarDebounced(valor);
-    }
-
+    if (campo === 'caixa') verificarDebounced(valor);
     if (erros[campo]) {
       setErros(prev => {
         const novosErros = { ...prev };
@@ -134,16 +221,8 @@ export default function ConferenciaForm({ onSuccess }) {
     }
   };
 
-
-
-  // Atualizar campo da conferência
   const atualizarCampo = (campo, valor) => {
-    setConferencia(prev => ({
-      ...prev,
-      [campo]: valor
-    }));
-
-    // Limpar erro do campo quando o usuário começar a digitar
+    setConferencia(prev => ({ ...prev, [campo]: valor }));
     if (erros[campo]) {
       setErros(prev => {
         const novosErros = { ...prev };
@@ -153,46 +232,24 @@ export default function ConferenciaForm({ onSuccess }) {
     }
   };
 
-  // Atualizar porta específica
   const atualizarPorta = (index, campo, valor) => {
     setConferencia(prev => ({
       ...prev,
-      portas: prev.portas.map((porta, i) =>
-        i === index ? { ...porta, [campo]: valor } : porta
-      )
+      portas: prev.portas.map((porta, i) => i === index ? { ...porta, [campo]: valor } : porta)
     }));
-
-    // Limpar erro da porta quando o usuário começar a digitar
-    const chaveErro = `porta_${index}_${campo}`;
-    if (erros[chaveErro]) {
-      setErros(prev => {
-        const novosErros = { ...prev };
-        delete novosErros[chaveErro];
-        return novosErros;
-      });
-    }
   };
-
 
   const adicionarMultiplasPortas = (quantidade) => {
     setConferencia(prev => {
       const inicio = prev.portas.length + 1;
-
       const novasPortas = Array.from({ length: quantidade }, (_, i) => ({
         ...PORTA_PADRAO,
         nrPorta: inicio + i
       }));
-
-      return {
-        ...prev,
-        portas: [...prev.portas, ...novasPortas]
-      };
+      return { ...prev, portas: [...prev.portas, ...novasPortas] };
     });
   };
 
-
-
-  // Remover porta
   const removerPorta = (index) => {
     if (conferencia.portas.length > 1) {
       setConferencia(prev => ({
@@ -202,13 +259,14 @@ export default function ConferenciaForm({ onSuccess }) {
     }
   };
 
-  // Submeter formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (alertaDuplicidade === 'confirmacao' && !confirmadoDuplicidade) {
+      setMensagem({ tipo: 'erro', texto: 'Confirme que deseja prosseguir com a conferência recente.' });
+      return;
+    }
 
-    // Validar dados
     const { valido, erros: errosValidacao } = validarConferencia(conferencia);
-
     if (!valido) {
       setErros(errosValidacao);
       setMensagem({ tipo: 'erro', texto: 'Por favor, corrija os erros no formulário.' });
@@ -216,42 +274,18 @@ export default function ConferenciaForm({ onSuccess }) {
     }
 
     setLoading(true);
-    setErros({});
-    setMensagem({ tipo: '', texto: '' });
-
     try {
-
-
-      // DEBUG: Exibir o objeto da conferencia no console
-      //console.log('Objeto da conferencia a ser enviado:', conferencia);
-      //console.log('tecInterno_id:', conferencia.tecInterno_id, 'tipo:', typeof conferencia.tecInterno_id);
-      //console.log('tecExterno_id:', conferencia.tecExterno_id, 'tipo:', typeof conferencia.tecExterno_id);
-
-      // Tentar enviar para a API
       await conferenciasService.criarConferencia(conferencia);
-
       setMensagem({ tipo: 'sucesso', texto: MENSAGENS.SUCESSO_CRIAR });
-
-      // Resetar formulário
       setConferencia(CONFERENCIA_PADRAO);
-
-      // Chamar callback de sucesso se fornecido
-      if (onSuccess) {
-        setTimeout(() => {
-          onSuccess();
-        }, 1500);
-      }
-
+      setAlertaDuplicidade(null);
+      if (onSuccess) setTimeout(onSuccess, 1500);
     } catch (error) {
-      console.error('Erro ao criar conferência:', error);
       setMensagem({ tipo: 'erro', texto: error.message || MENSAGENS.ERRO_CRIAR });
     } finally {
       setLoading(false);
     }
   };
-
-
-
 
 
 
@@ -284,11 +318,10 @@ export default function ConferenciaForm({ onSuccess }) {
             </Alert>
           )}
 
-           {/* ALERTA DE DUPLICIDADE */}
+          {/* ALERTA DE DUPLICIDADE */}
           {alertaDuplicidade && conferenciaAnterior && (
-            <Alert className={`mb-6 border-2 animate-in fade-in slide-in-from-top-2 duration-300 ${
-              alertaDuplicidade === 'confirmacao' ? 'border-orange-300 bg-orange-50' : 'border-blue-200 bg-blue-50'
-            }`}>
+            <Alert className={`mb-6 border-2 animate-in fade-in slide-in-from-top-2 duration-300 ${alertaDuplicidade === 'confirmacao' ? 'border-orange-300 bg-orange-50' : 'border-blue-200 bg-blue-50'
+              }`}>
               {alertaDuplicidade === 'confirmacao' ? <AlertTriangle className="h-5 w-5 text-orange-600" /> : <Info className="h-5 w-5 text-blue-600" />}
               <AlertTitle className={`font-bold ${alertaDuplicidade === 'confirmacao' ? 'text-orange-800' : 'text-blue-800'}`}>
                 {alertaDuplicidade === 'confirmacao' ? 'Atenção: Caixa conferida recentemente!' : 'Informação: Caixa já conferida'}
@@ -299,9 +332,9 @@ export default function ConferenciaForm({ onSuccess }) {
                 </p>
                 {alertaDuplicidade === 'confirmacao' && (
                   <div className="flex items-center gap-3 mt-3 p-2 bg-white rounded border border-orange-200">
-                    <input 
-                      type="checkbox" 
-                      id="confirmar-dup" 
+                    <input
+                      type="checkbox"
+                      id="confirmar-dup"
                       checked={confirmadoDuplicidade}
                       onChange={(e) => setConfirmadoDuplicidade(e.target.checked)}
                       className="h-4 w-4 cursor-pointer"
@@ -363,82 +396,28 @@ export default function ConferenciaForm({ onSuccess }) {
                 {erros.dataConferencia && <p className="text-red-500 text-sm mt-1">{erros.dataConferencia}</p>}
               </div>
 
-              {/* Técnico Interno (Operador) */}
+              {/* TÉCNICO INTERNO COM BUSCA VIA API */}
               <div>
-                <Label htmlFor="tecInterno_id">Técnico Interno (Operador) *</Label>
-                {loadingUsuarios ? (
-                  <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
-                    <Loader className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-gray-600">Carregando operadores...</span>
-                  </div>
-                ) : (
-                  <Select
-                    value={conferencia.tecInterno_id ? conferencia.tecInterno_id.toString() : ''}
-                    onValueChange={(value) => {
-                      //console.log('Selecionado tecInterno:', value);
-                      const numValue = parseInt(value, 10);
-                      //console.log('Convertido para número:', numValue, 'isNaN:', isNaN(numValue));
-                      if (!isNaN(numValue)) {
-                        //console.log('Atualizando tecInterno_id para:', numValue);
-                        atualizarCampo('tecInterno_id', numValue);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className={erros.tecInterno_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione um operador" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {operadores.map((operador) => (
-                        <SelectItem key={operador.id} value={operador.id.toString()}>
-                          {operador.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                )}
-                {erros.tecInterno_id && (
-                  <p className="text-red-500 text-sm mt-1">{erros.tecInterno_id}</p>
-                )}
+                <Label className="font-semibold">Técnico Interno *</Label>
+                <ComboboxUsuarioAPI
+                  value={conferencia.tecInterno_id}
+                  onChange={(v) => atualizarCampo('tecInterno_id', v)}
+                  placeholder="Buscar técnico interno..."
+                  funcaoFiltro="Operador"
+                />
+                {erros.tecInterno_id && <p className="text-xs text-red-500 mt-1">{erros.tecInterno_id}</p>}
               </div>
 
-              {/* Técnico Externo */}
+              {/* TÉCNICO EXTERNO COM BUSCA VIA API */}
               <div className="md:col-span-2">
-                <Label htmlFor="tecExterno_id">Técnico Externo *</Label>
-                {loadingUsuarios ? (
-                  <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
-                    <Loader className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-gray-600">Carregando técnicos...</span>
-                  </div>
-                ) : (
-                  <Select
-                    value={conferencia.tecExterno_id ? conferencia.tecExterno_id.toString() : ''}
-                    onValueChange={(value) => {
-                      //console.log('Selecionado tecExterno:', value);
-                      const numValue = parseInt(value, 10);
-                      //console.log('Convertido para número:', numValue, 'isNaN:', isNaN(numValue));
-                      if (!isNaN(numValue)) {
-                        //console.log('Atualizando tecExterno_id para:', numValue);
-                        atualizarCampo('tecExterno_id', numValue);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className={erros.tecExterno_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione um técnico" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tecnicos.map((tecnico) => (
-                        <SelectItem key={tecnico.id} value={tecnico.id.toString()}>
-                          {tecnico.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                )}
-                {erros.tecExterno_id && (
-                  <p className="text-red-500 text-sm mt-1">{erros.tecExterno_id}</p>
-                )}
+                <Label className="font-semibold">Técnico Externo *</Label>
+                <ComboboxUsuarioAPI
+                  value={conferencia.tecExterno_id}
+                  onChange={(v) => atualizarCampo('tecExterno_id', v)}
+                  placeholder="Buscar técnico externo..."
+                  funcaoFiltro="Técnico"
+                />
+                {erros.tecExterno_id && <p className="text-xs text-red-500 mt-1">{erros.tecExterno_id}</p>}
               </div>
 
 
