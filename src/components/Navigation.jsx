@@ -9,12 +9,16 @@ import {
   Calendar,
   Menu,
   X,
-  Activity
+  Activity,
+  Sun,
+  Moon
 } from 'lucide-react';
+import { useTheme } from '../App'; // Importar o hook de tema
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme(); // Usar o tema
 
   const navigationItems = [
     {
@@ -47,12 +51,12 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="sticky top-0 z-50 hidden md:flex bg-white border-b border-gray-200 px-6 py-4">
+      <nav className="sticky top-0 z-50 hidden md:flex bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-6 py-4 transition-colors duration-300">
         <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Logo" className="h-16 w-32 object-contain absolute" />
+              <img src="/logo.png" alt="Logo" className="h-16 w-32 object-contain" />
             </div>
           </div>
 
@@ -69,7 +73,7 @@ export default function Navigation() {
                     className={`flex items-center space-x-2 ${
                       active 
                         ? 'bg-primary text-primary-foreground' 
-                        : 'text-gray-600 hover:text-gray-900'
+                        : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:bg-slate-800'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -80,9 +84,23 @@ export default function Navigation() {
             })}
           </div>
 
-          {/* Status Badge */}
-          <div className="flex items-center">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          {/* Status Badge & Theme Toggle */}
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full w-10 h-10 dark:text-slate-300 dark:hover:bg-slate-800"
+              title={theme === 'light' ? 'Ativar Modo Escuro' : 'Ativar Modo Claro'}
+            >
+              {theme === 'light' ? (
+                <Moon className="h-5 w-5 text-slate-700" />
+              ) : (
+                <Sun className="h-5 w-5 text-yellow-400" />
+              )}
+            </Button>
+            
+            <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
               Sistema Ativo
             </Badge>
@@ -91,33 +109,48 @@ export default function Navigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden bg-white border-b border-gray-200">
+      <nav className="md:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 transition-colors duration-300">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Mobile Logo */}
             <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Logo" className="h-16 w-32 object-contain absolute" />
-              
+              <img src="/logo.png" alt="Logo" className="h-16 w-32 object-contain" />
             </div>
 
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
+            <div className="flex items-center space-x-2">
+              {/* Mobile Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="rounded-full w-10 h-10 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                {theme === 'light' ? (
+                  <Moon className="h-5 w-5 text-slate-700" />
+                ) : (
+                  <Sun className="h-5 w-5 text-yellow-400" />
+                )}
+              </Button>
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 dark:text-slate-300"
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="mt-4 pb-4 border-t border-gray-200">
+            <div className="mt-4 pb-4 border-t border-gray-200 dark:border-slate-800">
               <div className="pt-4 space-y-2">
                 {navigationItems.map((item) => {
                   const Icon = item.icon;
@@ -134,7 +167,7 @@ export default function Navigation() {
                         className={`w-full justify-start space-x-3 ${
                           active 
                             ? 'bg-primary text-primary-foreground' 
-                            : 'text-gray-600 hover:text-gray-900'
+                            : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:bg-slate-800'
                         }`}
                       >
                         <Icon className="h-4 w-4" />
@@ -151,8 +184,8 @@ export default function Navigation() {
               </div>
 
               {/* Mobile Status */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-800">
+                <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                   Sistema Ativo
                 </Badge>

@@ -43,8 +43,8 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -76,38 +76,108 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* --- DARK MODE MODERNO (SOFT CONTRAST / SaaS) --- */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: 222 47% 8%;       /* Fundo principal */
+  --foreground: 210 40% 96%;
+
+  --card: 222 40% 12%;            /* Superfície elevada */
+  --card-foreground: 210 40% 96%;
+
+  --popover: 222 40% 12%;
+  --popover-foreground: 210 40% 96%;
+
+  /* Azul moderno (estilo Vercel/Linear) */
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 222 30% 18%;
+  --secondary-foreground: 210 40% 96%;
+
+  --muted: 222 30% 18%;
+  --muted-foreground: 215 20% 70%;
+
+  --accent: 217 91% 60%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 70% 50%;
+
+  --border: 222 25% 22%;
+  --input: 222 25% 22%;
+  --ring: 217 91% 60%;
+
+  /* Charts harmônicos */
+  --chart-1: 217 91% 60%;
+  --chart-2: 160 70% 45%;
+  --chart-3: 280 70% 60%;
+  --chart-4: 40 90% 60%;
+  --chart-5: 340 75% 55%;
+
+  /* Sidebar levemente mais escura */
+  --sidebar: 222 47% 6%;
+  --sidebar-foreground: 210 40% 96%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 222 30% 16%;
+  --sidebar-accent-foreground: 210 40% 96%;
+  --sidebar-border: 222 25% 20%;
+  --sidebar-ring: 217 91% 60%;
+}
+
+/* Legibilidade refinada */
+html.dark .text-gray-400,
+html.dark .text-gray-500,
+html.dark .text-gray-600,
+html.dark .text-slate-400,
+html.dark .text-slate-500,
+html.dark .text-slate-600,
+html.dark .text-muted-foreground,
+html.dark .opacity-70 {
+  color: hsl(var(--muted-foreground));
+  opacity: 1;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark .font-bold,
+html.dark .text-gray-900 {
+  color: hsl(var(--foreground));
+}
+
+/* Superfícies */
+html.dark .card,
+html.dark [class*="bg-white"] {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+/* Inputs */
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark .select-trigger {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+/* Botões primários */
+html.dark .bg-primary {
+  background-color: hsl(var(--primary));
+}
+
+/* Fundo com leve profundidade (não flat) */
+body.dark {
+  background: radial-gradient(
+    circle at top,
+    rgba(59, 130, 246, 0.08),
+    transparent 45%
+  );
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @layer base {
