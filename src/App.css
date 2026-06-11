@@ -76,105 +76,140 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* --- DARK MODE MODERNO (SOFT CONTRAST / SaaS) --- */
+/* --- PALETA DEEP MIDNIGHT --- */
 .dark {
-  --background: 222 47% 8%;       /* Fundo principal */
-  --foreground: 210 40% 96%;
-
-  --card: 222 40% 12%;            /* Superfície elevada */
-  --card-foreground: 210 40% 96%;
-
-  --popover: 222 40% 12%;
-  --popover-foreground: 210 40% 96%;
-
-  /* Azul moderno (estilo Vercel/Linear) */
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 100%;
-
-  --secondary: 222 30% 18%;
-  --secondary-foreground: 210 40% 96%;
-
-  --muted: 222 30% 18%;
-  --muted-foreground: 215 20% 70%;
-
-  --accent: 217 91% 60%;
-  --accent-foreground: 0 0% 100%;
-
-  --destructive: 0 70% 50%;
-
-  --border: 222 25% 22%;
-  --input: 222 25% 22%;
-  --ring: 217 91% 60%;
-
-  /* Charts harmônicos */
-  --chart-1: 217 91% 60%;
-  --chart-2: 160 70% 45%;
-  --chart-3: 280 70% 60%;
-  --chart-4: 40 90% 60%;
-  --chart-5: 340 75% 55%;
-
-  /* Sidebar levemente mais escura */
-  --sidebar: 222 47% 6%;
-  --sidebar-foreground: 210 40% 96%;
-  --sidebar-primary: 217 91% 60%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 222 30% 16%;
-  --sidebar-accent-foreground: 210 40% 96%;
-  --sidebar-border: 222 25% 20%;
-  --sidebar-ring: 217 91% 60%;
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 15%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 15%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 217 32% 20%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 32% 20%;
+  --muted-foreground: 215 20% 80%;
+  --accent: 217 32% 25%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62% 40%;
+  --border: 217 32% 25%;
+  --input: 217 32% 25%;
+  --ring: 212 26% 83%;
+  
+  background-color: #0a192f !important;
+  color: #f1f5f9 !important;
 }
 
-/* Legibilidade refinada */
-html.dark .text-gray-400,
-html.dark .text-gray-500,
-html.dark .text-gray-600,
-html.dark .text-slate-400,
-html.dark .text-slate-500,
-html.dark .text-slate-600,
-html.dark .text-muted-foreground,
-html.dark .opacity-70 {
-  color: hsl(var(--muted-foreground));
-  opacity: 1;
+
+/* Todos os botões da aplicação */
+html.dark button {
+  transition: all 0.2s ease-in-out !important;
 }
 
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark .font-bold,
-html.dark .text-gray-900 {
-  color: hsl(var(--foreground));
+/* Botões de Navegação (Topo) e Botões Outline */
+html.dark button.variant-outline,
+html.dark .border-slate-200,
+html.dark button[class*="border"] {
+  background-color: #112240 !important;
+  border-color: #233554 !important;
+  color: #f1f5f9 !important;
 }
 
-/* Superfícies */
-html.dark .card,
-html.dark [class*="bg-white"] {
-  background-color: hsl(var(--card));
-  border-color: hsl(var(--border));
+html.dark button.variant-outline:hover,
+html.dark button[class*="border"]:hover {
+  background-color: #1e293b !important;
+  border-color: #64ffda !important;
+  color: #64ffda !important;
+  transform: translateY(-1px);
 }
 
-/* Inputs */
-html.dark input,
-html.dark textarea,
-html.dark select,
-html.dark .select-trigger {
-  background-color: hsl(var(--card));
-  border-color: hsl(var(--border));
-  color: hsl(var(--foreground));
+/* Botões Primários (Salvar, Nova Conferência) */
+html.dark .bg-primary,
+html.dark button.variant-default {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
 }
 
-/* Botões primários */
-html.dark .bg-primary {
-  background-color: hsl(var(--primary));
+html.dark .bg-primary:hover,
+html.dark button.variant-default:hover {
+  background-color: #2563eb !important;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  transform: scale(1.02);
 }
 
-/* Fundo com leve profundidade (não flat) */
-body.dark {
-  background: radial-gradient(
-    circle at top,
-    rgba(59, 130, 246, 0.08),
-    transparent 45%
-  );
+/* Botões Ghost (Ver Detalhes, Ícones) */
+html.dark button.variant-ghost:hover,
+html.dark button[class*="ghost"]:hover {
+  background-color: rgba(100, 255, 218, 0.1) !important;
+  color: #64ffda !important;
 }
+
+/* Botões Secundários (Limpar) */
+html.dark .bg-secondary,
+html.dark button.variant-secondary {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .bg-secondary:hover,
+html.dark button.variant-secondary:hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+/* Ícones de Lixeira */
+html.dark .text-red-500:hover {
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  transform: scale(1.1);
+}
+
+
+html.dark tr:hover {
+  background-color: #1e293b !important;
+}
+
+html.dark .card {
+  background-color: #112240 !important;
+  border-color: #233554 !important;
+}
+
+html.dark svg {
+  color: #64ffda !important;
+}
+
+html.dark .text-muted-foreground {
+  color: #94a3b8 !important;
+}
+
+
+html.dark .hover\:bg-gray-50:hover,
+html.dark tr:hover {
+  background-color: #1e293b !important; 
+}
+
+html.dark [role="combobox"],
+html.dark [role="listbox"],
+html.dark .select-content,
+html.dark .popover-content {
+  background-color: #112240 !important;
+  border-color: #233554 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark [role="option"]:hover,
+html.dark .select-item:hover {
+  background-color: #1e293b !important;
+  color: #64ffda !important;
+}
+
+html.dark input[type="checkbox"] {
+  accent-color: #3b82f6;
+  border-color: #233554;
+}
+
 
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
