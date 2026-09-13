@@ -41,26 +41,19 @@ export const validarConferencia = (conferencia) => {
 // Formatar data para exibição (só data)
 export const formatarData = (data) => {
   if (!data) return '';
-  try {
-    const dataObj = new Date(data);
-    return dataObj.toLocaleDateString('pt-BR');
-  } catch (error) {
-    return data;
-  }
+  const dataObj = new Date(data);
+  return Number.isNaN(dataObj.getTime()) ? data : dataObj.toLocaleDateString('pt-BR');
 };
 
 // Formatar data e hora para exibição
 export const formatarDataHora = (data) => {
   if (!data) return '';
-  try {
-    const dataObj = new Date(data);
-    return dataObj.toLocaleString('pt-BR', {
-      dateStyle: 'short',
-      timeStyle: 'short'
-    });
-  } catch (error) {
-    return data;
-  }
+  const dataObj = new Date(data);
+  if (Number.isNaN(dataObj.getTime())) return data;
+  return dataObj.toLocaleString('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  });
 };
 
 
@@ -116,4 +109,3 @@ export const formatarBooleano = (valor) => {
   if (valor === false || valor === 'false') return 'Não';
   return '-';
 };
-

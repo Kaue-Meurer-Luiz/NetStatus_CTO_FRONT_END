@@ -27,16 +27,21 @@ export const PORTA_PADRAO = {
   observacao: ''
 };
 
-// Estrutura padrão de uma conferência
-export const CONFERENCIA_PADRAO = {
+const formatarDataHoraLocal = (data = new Date()) => {
+  const deslocamentoFuso = data.getTimezoneOffset() * 60 * 1000;
+  return new Date(data.getTime() - deslocamentoFuso).toISOString().slice(0, 16);
+};
+
+// Cria uma nova estrutura para evitar uma data antiga e referências compartilhadas.
+export const criarConferenciaPadrao = () => ({
   caixa: '',
   cidade: '',
-  dataConferencia: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
+  dataConferencia: formatarDataHoraLocal(),
   observacao: '',
   tecInterno_id: 0,
   tecExterno_id: 0,
   portas: []
-};
+});
 
 // Validação de campos obrigatórios
 export const CAMPOS_OBRIGATORIOS = {

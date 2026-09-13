@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Eye, Calendar, MapPin, User, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService } from '../services/api';
-import { formatarDataHora, formatarData, getCorStatus, formatarBooleano } from '../lib/utils';
+import { formatarDataHora, getCorStatus, formatarBooleano } from '../lib/utils';
 import { MENSAGENS } from '../lib/constants';
 
 export default function ConferenciasList({ limite = null, titulo = "Conferências" }) {
@@ -16,8 +16,8 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
   const [loadingLista, setLoadingLista] = useState(false);
   const [erro, setErro] = useState('');
   const [conferenciaSelecionada, setConferenciaSelecionada] = useState(null);
-  const [filtros, setFiltros] = useState({});
   const [textoBusca, setTextoBusca] = useState('');
+  const [filtroCaixa, setFiltroCaixa] = useState('');
 
 
 
@@ -29,12 +29,8 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
 
 
   // Carregar conferências
-  const carregarConferencias = async (isFiltro = false) => {
-  if (loadingInicial) {
-    setLoadingInicial(true);
-  } else if (!isFiltro) {
-    setLoadingLista(true);
-  }
+  const carregarConferencias = useCallback(async () => {
+  setLoadingLista(true);
 
   setErro('');
 
@@ -46,34 +42,27 @@ export default function ConferenciasList({ limite = null, titulo = "Conferência
       const data = await conferenciasService.buscarConferenciasPaginado(
         paginaAtual,
         10,
-        filtros?.caixa || ''
+        filtroCaixa
       );
 
       setConferencias(data.content || []);
       setTotalPaginas(data.totalPages || 0);
       setTotalElementos(data.totalElements || 0);
     }
-  } catch (error) {
-    setErro(MENSAGENS.ERRO_CARREGAR);
+  } catch {
+    setErro(`${MENSAGENS.ERRO_CARREGAR} Verifique a conexão com a API.`);
   } finally {
     setLoadingInicial(false);
     setLoadingLista(false);
   }
-};
+  }, [filtroCaixa, limite, paginaAtual]);
 
 
 
 useEffect(() => {
   const timeout = setTimeout(() => {
     setPaginaAtual(0);
-
-    if (textoBusca.trim() === '') {
-      setFiltros({});
-    } else {
-      setFiltros({ caixa: textoBusca });
-    }
-
-    carregarConferencias(true); // 👈 flag de filtro
+    setFiltroCaixa(textoBusca.trim());
   }, 400);
 
   return () => clearTimeout(timeout);
@@ -83,8 +72,8 @@ useEffect(() => {
 
   // Efeito para carregar dados na inicialização e quando a página muda
   useEffect(() => {
-  carregarConferencias();
-}, [limite, paginaAtual, filtros]);
+    carregarConferencias();
+  }, [carregarConferencias]);
 
 
   const visualizarDetalhes = (conferencia) => {
@@ -132,23 +121,24 @@ useEffect(() => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-  placeholder="Buscar por caixa..."
-  value={textoBusca}
-  onChange={(e) => setTextoBusca(e.target.value)}
-  className="pl-10"
-/>
+                  placeholder="Buscar por caixa..."
+                  value={textoBusca}
+                  onChange={(e) => setTextoBusca(e.target.value)}
+                  className="pl-10"
+                />
 
               </div>
             </div>
           )}
           
 
-          {conferencias.length === 0 ? (
+          {loadingLista ? (
+            <div className="text-center py-8 text-gray-500">Atualizando conferências...</div>
+          ) : conferencias.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {conferencias.length === 0 
-                ? 'Nenhuma conferência encontrada.'
-                : 'Nenhuma conferência encontrada para os critérios de busca.'
-              }
+              {filtroCaixa
+                ? 'Nenhuma conferência encontrada para os critérios de busca.'
+                : 'Nenhuma conferência encontrada.'}
             </div>
           ) : (
             <div className="space-y-4">
@@ -235,7 +225,7 @@ useEffect(() => {
                     variant="outline"
                     size="sm"
                     onClick={() => setPaginaAtual(prev => Math.max(0, prev - 1))}
-                    disabled={paginaAtual === 0}
+                    disabled={loadingLista || paginaAtual === 0}
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
                   </Button>
@@ -243,7 +233,7 @@ useEffect(() => {
                     variant="outline"
                     size="sm"
                     onClick={() => setPaginaAtual(prev => prev + 1)}
-                    disabled={paginaAtual >= totalPaginas - 1}
+                    disabled={loadingLista || paginaAtual >= totalPaginas - 1}
                   >
                     Próxima <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>

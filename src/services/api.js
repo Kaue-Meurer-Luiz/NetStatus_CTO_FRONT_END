@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// URL base da API
-const API_BASE_URL = 'http://191.243.48.49:8080/api';
+// Usa a API pública atual por padrão. VITE_API_URL permite trocar o ambiente sem alterar o código.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://191.243.48.49:8080/api';
 
 // Instância do axios com configurações padrão
 const api = axios.create({
@@ -44,55 +44,38 @@ export const conferenciasService = {
 
   // 1. NOVO MÉTODO: Buscar conferências PAGINADAS (Para a listagem completa)
   buscarConferenciasPaginado: async (page = 0, size = 10, caixa = '') => {
-    try {
-      let url = `/conferencias/listar?page=${page}&size=${size}`;
-      
-      if (caixa) {
-        url += `&caixa=${encodeURIComponent(caixa)}`;
-      }
-      
-      const res = await api.get(url);
-      return res.data; 
-    } catch (error) {
-      console.error('Erro ao buscar conferências:', error);
-      return { content: [], totalPages: 0, totalElements: 0 };
-    }
+    const response = await api.get('/conferencias/listar', {
+      params: {
+        page,
+        size,
+        ...(caixa.trim() && { caixa: caixa.trim() }),
+      },
+    });
+    return response.data;
   },
 
   // 2. AJUSTADO: Buscar as 5 mais recentes (Para o Dashboard)
   // Mantemos o endpoint /ultimas, mas garantimos que retorne um array
   buscarUltimasConferencias: async () => {
-    try {
-      const response = await api.get('/conferencias/ultimas');
-      // Se a API retornar um Page, extraímos o content. Se for lista, usamos direto.
-      return Array.isArray(response.data) ? response.data : (response.data.content || []);
-    } catch (error) {
-      console.error('Erro ao buscar últimas conferências:', error);
-      return [];
-    }
+    const response = await api.get('/conferencias/ultimas');
+    return Array.isArray(response.data) ? response.data : (response.data.content || []);
   },
 
   // 3. AJUSTADO: Buscar conferências por nome da caixa (Para duplicidade)
   // Agora usa o método paginado com um tamanho maior para garantir a busca
   buscarPorCaixa: async (caixa) => {
-    try {
-      const data = await conferenciasService.buscarConferenciasPaginado(0, 100);
-      const lista = data.content || [];
-      return lista.filter(c => c.caixa && c.caixa.toLowerCase().trim() === caixa.toLowerCase().trim());
-    } catch (error) {
-      console.error('Erro ao buscar conferências por caixa:', error);
-      return [];
-    }
+    const caixaNormalizada = caixa.trim().toLowerCase();
+    const data = await conferenciasService.buscarConferenciasPaginado(0, 100, caixa.trim());
+    const lista = data.content || [];
+    return lista.filter(
+      (conferencia) => conferencia.caixa?.trim().toLowerCase() === caixaNormalizada
+    );
   },
 
   // Método legado (opcional, para evitar quebras em outros lugares)
   buscarConferencias: async () => {
-    try {
-      const data = await conferenciasService.buscarConferenciasPaginado(0, 1000);
-      return data.content || [];
-    } catch (error) {
-      return [];
-    }
+    const data = await conferenciasService.buscarConferenciasPaginado(0, 1000);
+    return data.content || [];
   }
 };
 
@@ -109,44 +92,26 @@ export const usuariosService = {
   },
 
   buscarPorFuncao: async (funcao) => {
-    try {
-      const usuarios = await usuariosService.buscarTodos();
-      return usuarios.filter(usuario =>
-        usuario.funcao?.toLowerCase() === funcao.toLowerCase()
-      );
-    } catch (error) {
-      console.error(`Erro ao buscar usuários com função ${funcao}:`, error);
-      return [];
-    }
+    const usuarios = await usuariosService.buscarTodos();
+    return usuarios.filter(usuario =>
+      usuario.funcao?.toLowerCase() === funcao.toLowerCase()
+    );
   },
 
   buscarUsuariosPorTermo: async (termo = '') => {
-    try {
-      const res = await api.get(`/usuarios/buscar?termo=${encodeURIComponent(termo)}`);
-      return res.data; // Retorna a lista de usuários filtrada pelo Backend
-    } catch (error) {
-      console.error('Erro ao buscar usuários por termo:', error);
-      return [];
-    }
+    const response = await api.get('/usuarios/buscar', { params: { termo } });
+    return response.data;
   },
 
   // Mantém os outros métodos para compatibilidade
   buscarOperadores: async () => {
-    try {
-      const res = await api.get('/usuarios');
-      return res.data.filter(u => u.funcao?.toLowerCase() === 'operador');
-    } catch (error) {
-      return [];
-    }
+    const response = await api.get('/usuarios');
+    return response.data.filter(u => u.funcao?.toLowerCase() === 'operador');
   },
 
   buscarTecnicos: async () => {
-    try {
-      const res = await api.get('/usuarios');
-      return res.data.filter(u => u.funcao?.toLowerCase() === 'técnico');
-    } catch (error) {
-      return [];
-    }
+    const response = await api.get('/usuarios');
+    return response.data.filter(u => u.funcao?.toLowerCase() === 'técnico');
   }
 };
 

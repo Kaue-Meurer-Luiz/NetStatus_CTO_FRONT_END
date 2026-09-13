@@ -12,7 +12,6 @@ import {
   Plus
 } from 'lucide-react';
 import { conferenciasService } from '../services/api';
-import { formatarData } from '../lib/utils';
 import ConferenciasList from './ConferenciasList';
 
 export default function Dashboard({ onNovaConferencia }) {

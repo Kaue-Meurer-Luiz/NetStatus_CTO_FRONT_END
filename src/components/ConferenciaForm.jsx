@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils"
 import { Command, CommandGroup, CommandItem, CommandList, } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover"
 import { conferenciasService, usuariosService } from '../services/api';
-import { validarConferencia, debounce, formatarData } from '../lib/utils';
-import { CONFERENCIA_PADRAO, PORTA_PADRAO, STATUS_OPTIONS, MENSAGENS } from '../lib/constants';
+import { validarConferencia, formatarData } from '../lib/utils';
+import { criarConferenciaPadrao, PORTA_PADRAO, STATUS_OPTIONS, MENSAGENS } from '../lib/constants';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // Componente Combobox com Busca via API (Backend)
@@ -154,7 +154,7 @@ function ComboboxUsuarioAPI({
 }
 
 export default function ConferenciaForm({ onSuccess }) {
-  const [conferencia, setConferencia] = useState(CONFERENCIA_PADRAO);
+  const [conferencia, setConferencia] = useState(criarConferenciaPadrao);
   const [loading, setLoading] = useState(false);
   const [erros, setErros] = useState({});
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
@@ -198,26 +198,11 @@ export default function ConferenciaForm({ onSuccess }) {
       }
     } catch (error) {
       console.error('Erro na busca de duplicidade:', error);
+      setConferenciaAnterior(null);
+      setAlertaDuplicidade(null);
+      setMensagem({ tipo: 'erro', texto: 'Não foi possível verificar se a caixa já foi conferida.' });
     } finally {
       setVerificandoDuplicidade(false);
-    }
-  };
-
-  // Debounce para digitação da caixa
-  const verificarDebounced = useCallback(
-    debounce((val) => executarVerificacao(val), 500),
-    []
-  );
-
-  const atualizarCampoCaixa = (campo, valor) => {
-    setConferencia(prev => ({ ...prev, [campo]: valor }));
-    if (campo === 'caixa') verificarDebounced(valor);
-    if (erros[campo]) {
-      setErros(prev => {
-        const novosErros = { ...prev };
-        delete novosErros[campo];
-        return novosErros;
-      });
     }
   };
 
@@ -277,7 +262,7 @@ export default function ConferenciaForm({ onSuccess }) {
     try {
       await conferenciasService.criarConferencia(conferencia);
       setMensagem({ tipo: 'sucesso', texto: MENSAGENS.SUCESSO_CRIAR });
-      setConferencia(CONFERENCIA_PADRAO);
+      setConferencia(criarConferenciaPadrao());
       setAlertaDuplicidade(null);
       if (onSuccess) setTimeout(onSuccess, 1500);
     } catch (error) {
@@ -571,7 +556,7 @@ export default function ConferenciaForm({ onSuccess }) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setConferencia(CONFERENCIA_PADRAO)}
+                onClick={() => setConferencia(criarConferenciaPadrao())}
                 disabled={loading}
               >
                 Limpar
