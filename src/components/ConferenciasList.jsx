@@ -4,11 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Eye, Calendar, MapPin, User, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, Calendar, MapPin, User, AlertCircle, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { conferenciasService } from '../services/api';
 import { formatarDataHora, getCorStatus, formatarBooleano } from '../lib/utils';
 import { MENSAGENS } from '../lib/constants';
+import ConferenciaEditForm from './ConferenciaEditForm';
 
 export default function ConferenciasList({ limite = null, titulo = "Conferências" }) {
   const [conferencias, setConferencias] = useState([]);
@@ -82,6 +83,11 @@ useEffect(() => {
 
   const fecharDetalhes = () => {
     setConferenciaSelecionada(null);
+  };
+
+  const concluirEdicao = () => {
+    setConferenciaSelecionada(null);
+    carregarConferencias();
   };
 
   const obterNomeTecnico = (tecnico) => {
@@ -257,6 +263,7 @@ useEffect(() => {
         <ConferenciaDetalhes
           conferencia={conferenciaSelecionada}
           onClose={fecharDetalhes}
+          onUpdated={concluirEdicao}
           obterNomeTecnico={obterNomeTecnico}
         />
       )}
@@ -264,22 +271,37 @@ useEffect(() => {
   );
 }
 
-function ConferenciaDetalhes({ conferencia, onClose, obterNomeTecnico }) {
+function ConferenciaDetalhes({ conferencia, onClose, onUpdated, obterNomeTecnico }) {
+  const [editando, setEditando] = useState(false);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <Card className="border-0 shadow-none">
           <CardHeader className="border-b">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-4">
               <CardTitle className="text-xl">
-                Detalhes da Conferência - {conferencia.caixa}
+                {editando ? 'Editar Conferência' : `Detalhes da Conferência - ${conferencia.caixa}`}
               </CardTitle>
-              <Button onClick={onClose} variant="outline" size="sm">
-                Fechar
-              </Button>
+              <div className="flex gap-2">
+                {!editando && (
+                  <Button onClick={() => setEditando(true)} size="sm">
+                    <Pencil className="mr-2 h-4 w-4" /> Editar
+                  </Button>
+                )}
+                <Button onClick={onClose} variant="outline" size="sm">Fechar</Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-6">
+            {editando ? (
+              <ConferenciaEditForm
+                conferencia={conferencia}
+                onCancel={() => setEditando(false)}
+                onSuccess={onUpdated}
+              />
+            ) : (
+              <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="text-sm font-medium text-gray-500">Caixa</label>
@@ -345,6 +367,8 @@ function ConferenciaDetalhes({ conferencia, onClose, obterNomeTecnico }) {
                 </p>
               )}
             </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

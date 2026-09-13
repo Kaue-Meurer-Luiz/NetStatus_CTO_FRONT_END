@@ -1,157 +1,17 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Save, AlertCircle, AlertTriangle, Info, Eye, Loader, Check, ChevronsUpDown, Loader2, Search } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, AlertTriangle, Info, Loader } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { cn } from "@/lib/utils"
-import { Command, CommandGroup, CommandItem, CommandList, } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover"
-import { conferenciasService, usuariosService } from '../services/api';
+import { conferenciasService } from '../services/api';
 import { validarConferencia, formatarData } from '../lib/utils';
 import { criarConferenciaPadrao, PORTA_PADRAO, STATUS_OPTIONS, MENSAGENS } from '../lib/constants';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-// Componente Combobox com Busca via API (Backend)
-function ComboboxUsuarioAPI({
-  value,
-  onChange,
-  placeholder = "Selecione um usuário...",
-  funcaoFiltro = null // 'Operador' ou 'Técnico'
-}) {
-  const [open, setOpen] = useState(false)
-  const [termo, setTermo] = useState("")
-  const [usuarios, setUsuarios] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null)
-  const inputRef = useRef(null)
-  const handleInputChange = (e) => {
-    const novoValor = e.target.value;
-    setTermo(novoValor);
-    setUsuarioSelecionado(null);
-  };
-
-  // Carregar usuários por termo via API
-  const carregarUsuarios = useCallback(async (termoBusca = "") => {
-    setLoading(true)
-    try {
-      // Usa o novo endpoint /usuarios/buscar?termo=...
-      const data = await usuariosService.buscarUsuariosPorTermo(termoBusca)
-
-      // Filtra pela função no Front-end (caso o Backend retorne todos)
-      const filtrados = funcaoFiltro
-        ? data.filter(u => u.funcao?.toLowerCase() === funcaoFiltro.toLowerCase())
-        : data
-
-      setUsuarios(filtrados)
-
-      // Se já houver um valor selecionado, tenta encontrar o objeto para exibir o nome
-      if (value && !usuarioSelecionado) {
-        const selecionado = filtrados.find(u => String(u.id) === String(value))
-        if (selecionado) setUsuarioSelecionado(selecionado)
-      }
-    } catch (error) {
-      console.error("Erro ao buscar usuários:", error)
-    } finally {
-      setLoading(false)
-    }
-  }, [value, funcaoFiltro, usuarioSelecionado])
-
-  // Efeito para busca com debounce manual
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (open) carregarUsuarios(termo)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [termo, open, carregarUsuarios])
-
-  // Carregar inicial para mostrar o nome do usuário já selecionado (se houver)
-  useEffect(() => {
-    if (value && !usuarioSelecionado) {
-      carregarUsuarios("")
-    }
-  }, [value, usuarioSelecionado, carregarUsuarios])
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={(isOpen) => {
-        setOpen(isOpen)
-
-        if (isOpen) {
-          setTimeout(() => {
-            inputRef.current?.focus()
-          }, 0)
-        }
-      }}
-    >
-      <PopoverTrigger asChild>
-        <div className="relative w-full">
-          <Input
-            ref={inputRef}
-            value={termo}
-            onChange={handleInputChange}
-            placeholder={placeholder}
-            className="pr-10 bg-white"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-            ) : (
-              <Search className="h-4 w-4 text-gray-400" />
-            )}
-          </div>
-        </div>
-      </PopoverTrigger>
-
-      {/* O PopoverContent garante que a lista feche ao clicar fora */}
-      <PopoverContent
-        className="p-0 w-[--radix-popover-trigger-width] shadow-xl border border-gray-200 bg-white"
-        align="start"
-        onOpenAutoFocus={(e) => e.preventDefault()} // Evita que o foco saia do input ao abrir
-      >
-        <Command shouldFilter={false}>
-          <CommandList className="max-h-60 overflow-y-auto">
-            {usuarios.length === 0 && !loading && (
-              <div className="p-4 text-sm text-gray-500 text-center">Nenhum usuário encontrado.</div>
-            )}
-            <CommandGroup>
-              {usuarios.map((usuario) => (
-                <CommandItem
-                  key={usuario.id}
-                  value={usuario.nome}
-                  onSelect={() => {
-                    setUsuarioSelecionado(usuario)
-                    setTermo(usuario.nome)
-                    onChange(usuario.id)
-                    setOpen(false)
-                  }}
-                  className="cursor-pointer hover:bg-blue-50 py-2 px-3 flex items-center justify-between"
-                >
-                  <div className="flex items-center">
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4 text-blue-600",
-                        String(value) === String(usuario.id) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <span className="font-medium">{usuario.nome}</span>
-                  </div>
-                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
-                    {usuario.funcao}
-                  </span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  )
-}
+import UsuarioCombobox from './UsuarioCombobox';
 
 export default function ConferenciaForm({ onSuccess }) {
   const [conferencia, setConferencia] = useState(criarConferenciaPadrao);
@@ -384,7 +244,7 @@ export default function ConferenciaForm({ onSuccess }) {
               {/* TÉCNICO INTERNO COM BUSCA VIA API */}
               <div>
                 <Label className="font-semibold">Técnico Interno *</Label>
-                <ComboboxUsuarioAPI
+                <UsuarioCombobox
                   value={conferencia.tecInterno_id}
                   onChange={(v) => atualizarCampo('tecInterno_id', v)}
                   placeholder="Buscar técnico interno..."
@@ -396,7 +256,7 @@ export default function ConferenciaForm({ onSuccess }) {
               {/* TÉCNICO EXTERNO COM BUSCA VIA API */}
               <div className="md:col-span-2">
                 <Label className="font-semibold">Técnico Externo *</Label>
-                <ComboboxUsuarioAPI
+                <UsuarioCombobox
                   value={conferencia.tecExterno_id}
                   onChange={(v) => atualizarCampo('tecExterno_id', v)}
                   placeholder="Buscar técnico externo..."

@@ -4,7 +4,7 @@ export const STATUS_PORTA = {
   CANCELADO: 'CANCELADO',
   MUDOU_SE: 'MUDOU-SE',
   NAO_IDENTIFICADO: 'Ñ IDENTIFICADO',
-  NAO_CAIU_NGM: 'Não CAIU NGM',
+  NAO_CAIU_NGM: 'Ñ CAIU NGM',
   VAGA: 'VAGA'
 
 };
@@ -14,6 +14,7 @@ export const STATUS_OPTIONS = [
   { value: STATUS_PORTA.ATIVO, label: 'Ativo' },
   { value: STATUS_PORTA.CANCELADO, label: 'Cancelado' },
   { value: STATUS_PORTA.MUDOU_SE, label: 'Mudou-se' },
+  { value: STATUS_PORTA.NAO_IDENTIFICADO, label: 'Não identificado' },
   { value: STATUS_PORTA.NAO_CAIU_NGM, label: 'Não Caiu Ninguém' },
   { value: STATUS_PORTA.VAGA, label: 'Vaga'}
 ];

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Usa a API pública atual por padrão. VITE_API_URL permite trocar o ambiente sem alterar o código.
+// A API pública continua sendo usada nas operações existentes.
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://191.243.48.49:8080/api';
 
 // Instância do axios com configurações padrão
@@ -22,7 +22,7 @@ api.interceptors.response.use(
       const { status, data } = error.response;
       throw new Error(`Erro ${status}: ${data.message || 'Erro no servidor'}`);
     } else if (error.request) {
-      throw new Error('Erro de conexão. Verifique se a API está rodando.');
+      throw new Error('A API não respondeu ou bloqueou a requisição pelo CORS. Verifique o endereço e a configuração do servidor.');
     } else {
       throw new Error('Erro inesperado: ' + error.message);
     }
@@ -40,6 +40,11 @@ export const conferenciasService = {
       console.error('Erro ao criar conferência:', error);
       throw error;
     }
+  },
+
+  atualizarConferencia: async (conferencia) => {
+    const response = await api.put('/conferencias', conferencia);
+    return response.data;
   },
 
   // 1. NOVO MÉTODO: Buscar conferências PAGINADAS (Para a listagem completa)
