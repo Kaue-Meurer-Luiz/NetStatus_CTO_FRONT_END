@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // A API pública continua sendo usada nas operações existentes.
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://191.243.48.49:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://netstatus.duckdns.org/api';
 
 // Instância do axios com configurações padrão
 const api = axios.create({
